@@ -1,3 +1,3 @@
 PROCESSOR=microblaze_0
 REPOSITORIES=
-HWSPEC=../../platforms/sp605/system.xml
+HWSPEC=../hw_new_hw_platform/system.xml
