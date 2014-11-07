@@ -1,3 +1,32 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h> 
+
+
+
+// f-a-u-l
+#define MAGIC_NR_LOW 0x6661756c 
+// t-i-f-y
+#define MAGIC_NR_HIGH 0x74696679
+
+struct faultify_handle {
+  int portno;
+  int sockfd;
+  struct hostent *server;
+  struct sockaddr_in serv_addr;
+
+
+
+};
+
+int8_t faultify_comm_init(struct faultify_handle **ftx);
+int8_t faultify_comm_connect(struct faultify_handle *ftx);
+int8_t faultify_comm_disconnect(struct faultify_handle *ftx);
+
 
 
 /*
@@ -28,7 +57,7 @@ char * ip;
 uint32_t baseaddr;
 
 };
-
+faultify_comm_connect(simulator struct *)
 faultify_comm_identify(simulator strct*)
 faultify_comm_configure_pe(sim str *,*pe)
 faultify_comm_start_simulation(sim str*,cycles/time/variance/free)
