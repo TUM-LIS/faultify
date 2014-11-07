@@ -17,6 +17,7 @@ int main(void) {
     fprintf(stderr,"failed to connect to emulator\n");
   }
 
+  /*
   char buffer[256];
   printf("Please enter the message: ");
   bzero(buffer,256);
@@ -29,7 +30,13 @@ int main(void) {
   if (r < 0) 
     printf("ERROR reading from socket");
   printf("%s\n",buffer);
+  */
   
+  r = faultify_comm_identify(ftx);
+  if (r) {
+    fprintf(stderr,"failed to identify the emulator\n");
+  }
+
   r = faultify_comm_disconnect(ftx);
 
 

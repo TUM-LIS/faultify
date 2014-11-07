@@ -7,18 +7,27 @@
 #include <netdb.h> 
 
 
+#define HOST_SW_VER_MAJOR 0x00
+#define HOST_SW_VER_MINOR 0x01
 
 // f-a-u-l
 #define MAGIC_NR_LOW 0x6661756c 
 // t-i-f-y
 #define MAGIC_NR_HIGH 0x74696679
 
+
+enum comands {cmd_identify=1,
+	       cmd_configure};
+
 struct faultify_handle {
   int portno;
   int sockfd;
   struct hostent *server;
   struct sockaddr_in serv_addr;
-
+  uint8_t version_fpga_software[2];
+  uint8_t version_fpga_hardware[2];
+  uint8_t version_host_software[2];
+  uint32_t circuit_identifier;
 
 
 };
@@ -26,6 +35,8 @@ struct faultify_handle {
 int8_t faultify_comm_init(struct faultify_handle **ftx);
 int8_t faultify_comm_connect(struct faultify_handle *ftx);
 int8_t faultify_comm_disconnect(struct faultify_handle *ftx);
+int8_t faultify_comm_identify(struct faultify_handle *ftx);
+
 
 
 
@@ -37,7 +48,6 @@ http://www.linuxhowtos.org/C_C++/socket.htm
 
 #define PORT xx
 #define MAX_FRAME_SIZE xx
-
 #define cmd_identify 1
 #define cmd_configure 2
 #define cmd_start_sim 3
