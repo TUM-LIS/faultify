@@ -46,16 +46,32 @@ pause(2)
 unix('killall xterm');
 
 result = csvread('result.csv');
-subplot(1,2,1)
-plot(result)
-subplot(1,2,2)
-plot(X)
 PA=result;
 
 reset_decoder;
 
 %Define the maximal mistake for the output
-max_pe = [0 1E-8 1E-7 1E-6 1E-5 1E-4 1E-3 1E-2 1E-1 0]
+% le
+%max_pe = [0 1E-8 1E-7 1E-6 1E-5 1E-4 1E-3 1E-2 1E-1 0];
+% be
+max_pe = [0 1E-1 1E-2 1E-3 1E-4 1E-5 1E-6 1E-7 1E-8 0];
+max_vec= zeros(1,89);
+max_vec(1:56) = max_pe(1);
+max_vec(57+((0:4-1)*8)) = max_pe(2);
+max_vec(58+((0:4-1)*8)) = max_pe(3);
+max_vec(59+((0:4-1)*8)) = max_pe(4);
+max_vec(60+((0:4-1)*8)) = max_pe(5);
+max_vec(61+((0:4-1)*8)) = max_pe(6);
+max_vec(62+((0:4-1)*8)) = max_pe(7);
+max_vec(63+((0:4-1)*8)) = max_pe(8);
+max_vec(64+((0:4-1)*8)) = max_pe(9);
+max_vec(89) = max_pe(10);
+
+% plot some infos
+subplot(1,2,1)
+plot([1:89],result(1:end-1),'r-',[1:89],max_vec,'b-')
+subplot(1,2,2)
+plot(X)
 
 % first 56 output bits
 for i=1:56
@@ -136,7 +152,7 @@ else
     opt=opt + 20*PA(89);
 end
 
-
+opt
 
 end
 

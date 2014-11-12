@@ -6,15 +6,18 @@ stelle=418;
 lb=zeros(1,418);
 
 %@upperbound;
-ub=0.01*ones(1,418);
+ub=0.001*ones(1,418);
 
 % reset
 reset_decoder;
 
+% numGen
+numGen = 10;
+
 % Setup genetic algorithm
 gaoptions = gaoptimset('PlotFcns',{@gaplotbestf,@gaplotstopping,@gaplotbestindiv,@gaplotgenealogy},...
                         'InitialPopulation',zeros(1,418),...
-                        'Generations',100);
+                        'Generations',numGen);
 
 % Run genetic optimization                    
 [X,fval,exitFlag,output,population,scores] = ga(@optimium,418,[],[],[],[],lb,ub,[],[],gaoptions);
