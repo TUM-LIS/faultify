@@ -83,13 +83,13 @@ int8_t faultify_comm_identify(struct faultify_handle *ftx) {
     return 1;
   }
 
-  r = read(ftx->sockfd,send_buffer,16);
+  r = read(ftx->sockfd,send_buffer,20);
   if (r < 0) 
     printf("ERROR reading from socket");
   int i;
-  for (i=0;i<16;i++) {
+  for (i=0;i<20;i++) {
     printf("%X ",send_buffer[i]);
   }
-  
+  printf("\n");
   return 0;
 }
