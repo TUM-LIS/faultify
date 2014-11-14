@@ -1,6 +1,7 @@
 C_SRCS += \
 common/src/echo.c \
 common/src/main.c \
+common/src/packet_parser.c \
 sp605/src/platform.c \
 sp605/src/platform_mb.c \
 sp605/src/platform_ppc.c \
@@ -12,6 +13,7 @@ sp605/src/lscript.ld
 OBJS += \
 common/src/echo.o \
 common/src/main.o \
+common/src/packet_parser.o \
 sp605/src/platform.o \
 sp605/src/platform_mb.o \
 sp605/src/platform_ppc.o \
@@ -20,6 +22,7 @@ sp605/src/platform_zynq.o
 C_DEPS += \
 common/src/echo.d \
 common/src/main.d \
+common/src/packet_parser.d \
 sp605/src/platform.d \
 sp605/src/platform_mb.d \
 sp605/src/platform_ppc.d \

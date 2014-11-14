@@ -39,6 +39,7 @@ void lwip_init();
 static struct netif server_netif;
 struct netif *echo_netif;
 
+
 void
 print_ip(char *msg, struct ip_addr *ip) 
 {
@@ -106,6 +107,7 @@ int main()
 	while (1) {
 		xemacif_input(echo_netif);
 		transfer_data();
+
 	}
   
 	/* never reached */
