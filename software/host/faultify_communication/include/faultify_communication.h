@@ -16,7 +16,7 @@
 #define MAGIC_NR_HIGH 0x74696679
 
 
-enum comands {cmd_identify=1,
+enum commands {cmd_identify=1,
 	       cmd_configure};
 
 struct faultify_handle {
