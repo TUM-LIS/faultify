@@ -18,7 +18,7 @@ _HEAP_SIZE = DEFINED(_HEAP_SIZE) ? _HEAP_SIZE : 0xA000;
 MEMORY
 {
    microblaze_0_i_bram_ctrl_microblaze_0_d_bram_ctrl : ORIGIN = 0x00000050, LENGTH = 0x00001FB0
-   ddr3_sdram_S_AXI_BASEADDR : ORIGIN = 0xA4000000, LENGTH = 0x04000000
+   mcb_ddr3_S0_AXI_BASEADDR : ORIGIN = 0xA8000000, LENGTH = 0x08000000
 }
 
 /* Specify the default entry point to the program */
@@ -49,15 +49,15 @@ SECTIONS
    *(.text)
    *(.text.*)
    *(.gnu.linkonce.t.*)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .init : {
    KEEP (*(.init))
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .fini : {
    KEEP (*(.fini))
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .ctors : {
    __CTOR_LIST__ = .;
@@ -68,7 +68,7 @@ SECTIONS
    KEEP (*(.ctors))
    __CTOR_END__ = .;
    ___CTORS_END___ = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .dtors : {
    __DTOR_LIST__ = .;
@@ -79,7 +79,7 @@ SECTIONS
    KEEP (*(.dtors))
    PROVIDE(__DTOR_END__ = .);
    PROVIDE(___DTORS_END___ = .);
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .rodata : {
    __rodata_start = .;
@@ -87,7 +87,7 @@ SECTIONS
    *(.rodata.*)
    *(.gnu.linkonce.r.*)
    __rodata_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .sdata2 : {
    . = ALIGN(8);
@@ -97,7 +97,7 @@ SECTIONS
    *(.gnu.linkonce.s2.*)
    . = ALIGN(8);
    __sdata2_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .sbss2 : {
    __sbss2_start = .;
@@ -105,7 +105,7 @@ SECTIONS
    *(.sbss2.*)
    *(.gnu.linkonce.sb2.*)
    __sbss2_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .data : {
    . = ALIGN(4);
@@ -114,31 +114,31 @@ SECTIONS
    *(.data.*)
    *(.gnu.linkonce.d.*)
    __data_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .got : {
    *(.got)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .got1 : {
    *(.got1)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .got2 : {
    *(.got2)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .eh_frame : {
    *(.eh_frame)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .jcr : {
    *(.jcr)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .gcc_except_table : {
    *(.gcc_except_table)
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .sdata : {
    . = ALIGN(8);
@@ -147,7 +147,7 @@ SECTIONS
    *(.sdata.*)
    *(.gnu.linkonce.s.*)
    __sdata_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .sbss (NOLOAD) : {
    . = ALIGN(4);
@@ -157,7 +157,7 @@ SECTIONS
    *(.gnu.linkonce.sb.*)
    . = ALIGN(8);
    __sbss_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .tdata : {
    __tdata_start = .;
@@ -165,7 +165,7 @@ SECTIONS
    *(.tdata.*)
    *(.gnu.linkonce.td.*)
    __tdata_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .tbss : {
    __tbss_start = .;
@@ -173,7 +173,7 @@ SECTIONS
    *(.tbss.*)
    *(.gnu.linkonce.tb.*)
    __tbss_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .bss (NOLOAD) : {
    . = ALIGN(4);
@@ -184,7 +184,7 @@ SECTIONS
    *(COMMON)
    . = ALIGN(4);
    __bss_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 _SDA_BASE_ = __sdata_start + ((__sbss_end - __sdata_start) / 2 );
 
@@ -198,7 +198,7 @@ _SDA2_BASE_ = __sdata2_start + ((__sbss2_end - __sdata2_start) / 2 );
    _heap_start = .;
    . += _HEAP_SIZE;
    _heap_end = .;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 .stack (NOLOAD) : {
    _stack_end = .;
@@ -206,7 +206,7 @@ _SDA2_BASE_ = __sdata2_start + ((__sbss2_end - __sdata2_start) / 2 );
    . = ALIGN(8);
    _stack = .;
    __stack = _stack;
-} > ddr3_sdram_S_AXI_BASEADDR
+} > mcb_ddr3_S0_AXI_BASEADDR
 
 _end = .;
 }
