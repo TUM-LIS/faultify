@@ -20,6 +20,9 @@ sp605.elf: $(OBJS) sp605/src/lscript.ld $(USER_OBJS)
 	@echo ' '
 
 
+download_elf : 
+	@echo 'downloading elf file'
+	xmd -tcl download_elf.tcl
 
 clean:
 	-$(RM) $(OBJS)$(C_DEPS)$(EXECUTABLES)$(ELFSIZE)$(ELFCHECK)$(S_UPPER_DEPS) sp605.elf
