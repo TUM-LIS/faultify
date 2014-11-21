@@ -1,5 +1,5 @@
 %% Main entrance for automated optimization
-
+clear all
 stelle=418;
 
 %@lowerbound;
@@ -12,7 +12,7 @@ ub=0.001*ones(1,418);
 reset_decoder;
 
 % numGen
-numGen = 10;
+numGen = 50;
 
 % Setup genetic algorithm
 gaoptions = gaoptimset('PlotFcns',{@gaplotbestf,@gaplotstopping,@gaplotbestindiv,@gaplotgenealogy},...
@@ -21,5 +21,4 @@ gaoptions = gaoptimset('PlotFcns',{@gaplotbestf,@gaplotstopping,@gaplotbestindiv
 
 % Run genetic optimization                    
 [X,fval,exitFlag,output,population,scores] = ga(@optimium,418,[],[],[],[],lb,ub,[],[],gaoptions);
-
-fprintf('X=: %g\n', X);
+save output_2.mat

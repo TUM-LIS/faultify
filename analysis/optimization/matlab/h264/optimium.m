@@ -52,9 +52,9 @@ reset_decoder;
 
 %Define the maximal mistake for the output
 % le
-%max_pe = [0 1E-8 1E-7 1E-6 1E-5 1E-4 1E-3 1E-2 1E-1 0];
+max_pe = [0 1E-8 1E-7 1E-6 1E-5 1E-4 1E-3 1E-2 1E-1 0];
 % be
-max_pe = [0 1E-1 1E-2 1E-3 1E-4 1E-5 1E-6 1E-7 1E-8 0];
+%max_pe = [0 1E-1 1E-2 1E-3 1E-4 1E-5 1E-6 1E-7 1E-8 0];
 max_vec= zeros(1,89);
 max_vec(1:56) = max_pe(1);
 max_vec(57+((0:4-1)*8)) = max_pe(2);
