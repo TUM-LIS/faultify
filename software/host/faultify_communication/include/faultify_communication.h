@@ -38,11 +38,13 @@ int8_t faultify_comm_init(struct faultify_handle **ftx);
 int8_t faultify_comm_connect(struct faultify_handle *ftx);
 int8_t faultify_comm_disconnect(struct faultify_handle *ftx);
 int8_t faultify_comm_identify(struct faultify_handle *ftx);
+int8_t faultify_comm_configure(struct faultify_handle *ftx,uint32_t len,double *pe);
 uint8_t faultify_packet_check_sequence(uint8_t *data);
 enum commands faultify_packet_check_cmd_type(uint8_t *data);
 uint32_t faultify_packet_check_length(uint8_t *data);
-
-
+uint8_t faultify_packet_set_magic_number(uint8_t *data);
+uint8_t faultify_packet_set_packet_type(uint8_t *data,enum commands cmd);
+uint8_t faultify_packet_set_packet_length(uint8_t *data,uint32_t len);
 
 
 /*
@@ -58,7 +60,6 @@ http://www.linuxhowtos.org/C_C++/socket.htm
 #define cmd_start_sim 3
 #define cmd_stop_sim 4
 #define cmd_read_res 5
-
 
 typedef sim_str {
 uint8_t version_fpga_software[2];

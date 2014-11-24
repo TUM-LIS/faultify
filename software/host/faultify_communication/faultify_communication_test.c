@@ -29,8 +29,20 @@ int main(void) {
 	    ftx->version_fpga_software[1],
 	    ftx->version_fpga_hardware[0],
 	    ftx->version_fpga_hardware[1]);
-    
   }
+  
+  double pe[10];
+  int i;
+  for (i=0;i<10;i++)
+    pe[i] = 0.01*i;
+  
+  r = faultify_comm_configure(ftx,10,&pe[0]);
+  if (r) {
+    fprintf(stderr,"failed to configure the emulator\n");
+  } else {
+    fprintf(stderr,"configured the emulator\n");
+  }
+
 
   r = faultify_comm_disconnect(ftx);
 

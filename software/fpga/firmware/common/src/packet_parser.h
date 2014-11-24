@@ -10,6 +10,7 @@
 #define PACKET_PARSER_H_
 
 #include <stdio.h>
+#include <string.h>
 
 #include "xparameters.h"
 
@@ -35,7 +36,10 @@
 enum commands {cmd_identify=1,
 	       cmd_configure};
 
-int packet_parser(struct tcp_pcb *pcb,char * data,int len);
+int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len);
+int comm_identify(struct tcp_pcb *pcb,unsigned char * data,int len);
+int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len);
+
 
 
 #endif /* PACKET_PARSER_H_ */

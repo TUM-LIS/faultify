@@ -64,20 +64,12 @@ int8_t faultify_comm_identify(struct faultify_handle *ftx) {
   bzero(send_buffer,16);
   uint8_t recv_buffer[20];
   bzero(recv_buffer,20);
-  
-  // magic number
-  send_buffer[0] = (MAGIC_NR_LOW >> 24) & 0xff;
-  send_buffer[1] = (MAGIC_NR_LOW >> 16) & 0xff;
-  send_buffer[2] = (MAGIC_NR_LOW >> 8) & 0xff;
-  send_buffer[3] = (MAGIC_NR_LOW >> 0) & 0xff;
-  send_buffer[4] = (MAGIC_NR_HIGH >> 24) & 0xff;
-  send_buffer[5] = (MAGIC_NR_HIGH >> 16) & 0xff;
-  send_buffer[6] = (MAGIC_NR_HIGH >> 8) & 0xff;
-  send_buffer[7] = (MAGIC_NR_HIGH >> 0) & 0xff;
 
+  //  magic number
+  faultify_packet_set_magic_number(send_buffer);
+  
   // type
-  send_buffer[8] = ((uint16_t)cmd_identify >> 8) & 0xFF;
-  send_buffer[9] = ((uint16_t)cmd_identify >> 0) & 0xFF;
+  faultify_packet_set_packet_type(send_buffer,cmd_identify);
   
   // req/answ
   send_buffer[10] = 0x01;
@@ -86,10 +78,9 @@ int8_t faultify_comm_identify(struct faultify_handle *ftx) {
   send_buffer[11] = 0x01;
 
   // length 
-  send_buffer[12] = 0x00;
-  send_buffer[13] = 0x00;
-  send_buffer[14] = 0x00;
-  send_buffer[15] = 0x00;
+  faultify_packet_set_packet_length(send_buffer,0);
+
+
   int r;
   
   r = write(ftx->sockfd,send_buffer,16);
@@ -114,7 +105,7 @@ int8_t faultify_comm_identify(struct faultify_handle *ftx) {
     printf("ERROR not a response\n");
   }
 
-  if (faultify_packet_check_length(recv_buffer)!= 20) {
+  if (faultify_packet_check_length(recv_buffer)!= 4) {
     printf("ERROR wrong response length\n");
   }
   
@@ -165,4 +156,91 @@ uint32_t faultify_packet_check_length(uint8_t *data) {
 	   ((uint32_t)data[14] << 8 ) |
 	    (uint32_t)data[15]           );
 
+}
+
+uint8_t faultify_packet_set_magic_number(uint8_t *data) {
+  // magic number
+  data[0] = (MAGIC_NR_LOW >> 24) & 0xff;
+  data[1] = (MAGIC_NR_LOW >> 16) & 0xff;
+  data[2] = (MAGIC_NR_LOW >> 8) & 0xff;
+  data[3] = (MAGIC_NR_LOW >> 0) & 0xff;
+  data[4] = (MAGIC_NR_HIGH >> 24) & 0xff;
+  data[5] = (MAGIC_NR_HIGH >> 16) & 0xff;
+  data[6] = (MAGIC_NR_HIGH >> 8) & 0xff;
+  data[7] = (MAGIC_NR_HIGH >> 0) & 0xff;
+  return 0;
+}
+
+uint8_t faultify_packet_set_packet_type(uint8_t *data,enum commands cmd){
+
+  data[8] = ((uint16_t)cmd >> 8) & 0xFF;
+  data[9] = ((uint16_t)cmd >> 0) & 0xFF;
+  return 0;
+}
+
+uint8_t faultify_packet_set_packet_length(uint8_t *data,uint32_t len){
+  data[12] = (uint8_t)(len >> 24) & 0xff;
+  data[13] = (uint8_t)(len >> 16) & 0xff;
+  data[14] = (uint8_t)(len >> 8) & 0xff;
+  data[15] = (uint8_t)(len) & 0xff;
+  return 0;
+  
+}
+
+int8_t faultify_comm_configure(struct faultify_handle *ftx, uint32_t len,double *pe) {
+  uint8_t send_buffer[16+sizeof(double)*len];
+  bzero(send_buffer,16+sizeof(double)*len);
+  uint8_t recv_buffer[16+sizeof(double)*len];
+  bzero(recv_buffer,16+sizeof(double)*len);
+ 
+  //  magic number
+  faultify_packet_set_magic_number(send_buffer);
+  // type
+  faultify_packet_set_packet_type(send_buffer,cmd_configure);
+  // req/answ
+  send_buffer[10] = 0x01;
+  // last 
+  send_buffer[11] = 0x01;
+  // length
+  faultify_packet_set_packet_length(send_buffer,len*sizeof(double));
+
+  uint32_t i,ii;
+  i = 0;
+  for (ii=0;ii<len*sizeof(double);ii+=sizeof(double)) {
+    memcpy(&send_buffer[16+ii],&pe[i++],sizeof(double));
+  }
+  /*
+    for (i=0;i<(16+sizeof(double)*len);i++) {
+    printf("%X ",send_buffer[i]);
+    }
+    printf("\n");
+  */
+  int r;
+  r = write(ftx->sockfd,send_buffer,16+sizeof(double)*len);
+  if (r<0) {
+    return 1;
+  }
+
+  r = read(ftx->sockfd,recv_buffer,16);
+  if (r < 0) 
+    printf("ERROR reading from socket");
+  
+  r = faultify_packet_check_sequence(recv_buffer);
+  if (r) {
+    printf("ERROR wrong magic number\n");
+  }
+  
+  if (cmd_configure != faultify_packet_check_cmd_type(recv_buffer)) {
+    printf("ERROR wrong command response\n");
+  }
+  
+  if  (recv_buffer[10]) {
+    printf("ERROR not a response\n");
+  }
+  
+  if (faultify_packet_check_length(recv_buffer)!= 0) {
+    printf("ERROR wrong response length\n");
+  }
+  
+  return 0;
 }
