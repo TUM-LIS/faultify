@@ -3,6 +3,7 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include <stdlib.h>
 
 
 int byte_to_bit(int endian, unsigned char *ibuf, int ilen, unsigned char *obuf, int *olen)
@@ -49,4 +50,60 @@ int bit_to_byte(int endian, unsigned char *ibuf, int ilen, unsigned char *obuf, 
     }
     *olen = j;
     return 0;
+}
+
+
+
+int fp_precision_reduction(double *in,unsigned int len,unsigned int precision) {
+  unsigned int i,b;
+  for (i=0;i<len;i++) {
+    for (b=0;b<(52-precision);b++) {
+      // unset bits
+      *(unsigned long *)&in[i] &= ~((unsigned long)1 << b);
+    }  
+  }
+  //printf("%lf\n",in[0][0]);
+  return 1;
+}
+
+
+int fp_uniform_fault_injection(double *in,unsigned int len, double p_e) {
+  
+  unsigned int i,b;
+  double r;
+  for (i=0;i<len;i++) {
+    for (b=0;b<64;b++) {
+      // fault injection
+      r = ((double)rand())/RAND_MAX;
+      if (r>p_e) {
+        // nothing
+      } else {
+        // toggle
+        *(unsigned long *)&in[i] ^= ((unsigned long)1 << b);
+      }
+    }  
+  }
+  return 1;
+  
+}
+
+
+int fp_fault_injection(double *in,unsigned int len, double *p_e) {
+  
+  unsigned int i,b;
+  double r;
+  for (i=0;i<len;i++) {
+    for (b=0;b<64;b++) {
+      // fault injection
+      r = ((double)rand())/RAND_MAX;
+      if (r>p_e[b]) {
+        // nothing
+      } else {
+        // toggle
+        *(unsigned long *)&in[i] ^= ((unsigned long)1 << b);
+      }
+    }  
+  }
+  return 1;
+  
 }
