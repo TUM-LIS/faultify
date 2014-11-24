@@ -15,26 +15,21 @@ int main(void) {
   r = faultify_comm_connect(ftx);
   if (r) {
     fprintf(stderr,"failed to connect to emulator\n");
+  } else {
+    fprintf(stderr,"connected to emulator\n");
+
   }
 
-  /*
-  char buffer[256];
-  printf("Please enter the message: ");
-  bzero(buffer,256);
-  fgets(buffer,255,stdin);
-  r = write(ftx->sockfd,buffer,strlen(buffer));
-  if (r < 0) 
-    printf("ERROR writing to socket");
-  bzero(buffer,256);
-  r = read(ftx->sockfd,buffer,255);
-  if (r < 0) 
-    printf("ERROR reading from socket");
-  printf("%s\n",buffer);
-  */
-  
   r = faultify_comm_identify(ftx);
   if (r) {
     fprintf(stderr,"failed to identify the emulator\n");
+  } else {
+    fprintf(stderr,"identified the emulator\n");
+    fprintf(stderr,"SW: %u.%u HW: %u.%u \n",ftx->version_fpga_software[0],
+	    ftx->version_fpga_software[1],
+	    ftx->version_fpga_hardware[0],
+	    ftx->version_fpga_hardware[1]);
+    
   }
 
   r = faultify_comm_disconnect(ftx);

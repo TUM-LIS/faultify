@@ -5,10 +5,12 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h> 
+#include <arpa/inet.h>
 
 
 #define HOST_SW_VER_MAJOR 0x00
 #define HOST_SW_VER_MINOR 0x01
+
 
 // f-a-u-l
 #define MAGIC_NR_LOW 0x6661756c 
@@ -36,6 +38,9 @@ int8_t faultify_comm_init(struct faultify_handle **ftx);
 int8_t faultify_comm_connect(struct faultify_handle *ftx);
 int8_t faultify_comm_disconnect(struct faultify_handle *ftx);
 int8_t faultify_comm_identify(struct faultify_handle *ftx);
+uint8_t faultify_packet_check_sequence(uint8_t *data);
+enum commands faultify_packet_check_cmd_type(uint8_t *data);
+uint32_t faultify_packet_check_length(uint8_t *data);
 
 
 
