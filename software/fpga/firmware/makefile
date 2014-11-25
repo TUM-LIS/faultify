@@ -1,5 +1,3 @@
-
-
 RM := rm -rf
 
 -include sources.mk

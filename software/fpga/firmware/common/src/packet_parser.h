@@ -26,6 +26,9 @@
 #include "lwip/err.h"
 #include "lwip/tcp.h"
 
+#include <stdint.h>
+
+#include "faultify_simulation.h"
 
 // f-a-u-l
 #define MAGIC_NR_LOW 0x6661756c

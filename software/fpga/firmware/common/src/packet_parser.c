@@ -92,9 +92,16 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
     }
   */
 
-  // TODO configure emulator
-  
-  // TODO send response
+  // configure emulator
+  uint32_t numOut = 54;
+  uint32_t cycles = 1000000;
+  uint32_t result[numOut];
+  faultify_run_campaign(numInj,numOut,cycles,&pe[0],&result[0]);
+  for (i=0;i<numOut;i++) {
+    xil_printf("%d\n",result[i]);
+  }
+
+  //send response
   int send_len = 16;
   unsigned char send_buffer[send_len];
   // magic number

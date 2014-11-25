@@ -30,13 +30,13 @@ int main(void) {
 	    ftx->version_fpga_hardware[0],
 	    ftx->version_fpga_hardware[1]);
   }
-  
-  double pe[10];
+  uint32_t numInj = 216;
+  double pe[numInj];
   int i;
-  for (i=0;i<10;i++)
-    pe[i] = 0.01*i;
+  for (i=0;i<numInj;i++)
+    pe[i] = 0.0f;
   
-  r = faultify_comm_configure(ftx,10,&pe[0]);
+  r = faultify_comm_configure(ftx,numInj,&pe[0]);
   if (r) {
     fprintf(stderr,"failed to configure the emulator\n");
   } else {

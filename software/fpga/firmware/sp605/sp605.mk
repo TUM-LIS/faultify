@@ -2,6 +2,7 @@ C_SRCS += \
 common/src/echo.c \
 common/src/main.c \
 common/src/packet_parser.c \
+common/src/faultify_simulation.c \
 sp605/src/platform.c \
 sp605/src/platform_mb.c \
 sp605/src/platform_ppc.c \
@@ -14,6 +15,7 @@ OBJS += \
 common/src/echo.o \
 common/src/main.o \
 common/src/packet_parser.o \
+common/src/faultify_simulation.o \
 sp605/src/platform.o \
 sp605/src/platform_mb.o \
 sp605/src/platform_ppc.o \
@@ -23,6 +25,7 @@ C_DEPS += \
 common/src/echo.d \
 common/src/main.d \
 common/src/packet_parser.d \
+common/src/faultify_simulation.d \
 sp605/src/platform.d \
 sp605/src/platform_mb.d \
 sp605/src/platform_ppc.d \

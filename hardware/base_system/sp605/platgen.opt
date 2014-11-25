@@ -4,6 +4,8 @@ xc6slx45tfgg484-3
 vhdl
 -intstyle
 default
+-lp
+../xpsLibraryPath/
 -msg
 __xps/ise/xmsgprops.lst
 system.mhs

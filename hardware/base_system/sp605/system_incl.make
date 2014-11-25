@@ -7,7 +7,7 @@
 # file manually, will be lost when make is invoked next. 
 #################################################################
 
-XILINX_EDK_DIR = /opt/tools/Xilinx/14.7/ISE_DS/EDK
+XILINX_EDK_DIR = $(XILINX_EDK)
 
 SYSTEM = system
 
@@ -21,7 +21,7 @@ INTSTYLE = default
 
 XPS_HDL_LANG = vhdl
 GLOBAL_SEARCHPATHOPT = 
-PROJECT_SEARCHPATHOPT = 
+PROJECT_SEARCHPATHOPT = -lp ../xpsLibraryPath/
 
 SEARCHPATHOPT = $(PROJECT_SEARCHPATHOPT) $(GLOBAL_SEARCHPATHOPT)
 
