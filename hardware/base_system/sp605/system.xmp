@@ -3,6 +3,7 @@ XmpVersion: 14.7
 VerMgmt: 14.7
 IntStyle: default
 Flow: ise
+ModuleSearchPath: /home/david/projects/faultify_github/faultify/hardware/base_system/xpsLibraryPath/libFaultify/pcores/faultify_axi_wrapper_v1_00_a/../../../
 MHS File: system.mhs
 Architecture: spartan6
 Device: xc6slx45t

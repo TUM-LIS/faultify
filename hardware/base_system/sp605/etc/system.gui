@@ -9,18 +9,18 @@
       <VARIABLE COL_INDEX="1" COL_WIDTH="100" IS_VISIBLE="TRUE" VIEWDISP="Bus Name" VIEWTYPE="HEADER"/>
       <VARIABLE COL_INDEX="2" IS_VISIBLE="FALSE" VIEWDISP="Bus Standard" VIEWTYPE="HEADER"/>
       <VARIABLE COL_INDEX="3" COL_WIDTH="100" IS_VISIBLE="TRUE" VIEWDISP="IP Type" VIEWTYPE="HEADER"/>
-      <VARIABLE COL_INDEX="4" COL_WIDTH="232" IS_VISIBLE="TRUE" VIEWDISP="IP Version" VIEWTYPE="HEADER"/>
+      <VARIABLE COL_INDEX="4" COL_WIDTH="663" IS_VISIBLE="TRUE" VIEWDISP="IP Version" VIEWTYPE="HEADER"/>
       <VARIABLE COL_INDEX="5" IS_VISIBLE="FALSE" VIEWDISP="IP Classification" VIEWTYPE="HEADER"/>
       <VARIABLE COL_INDEX="6" IS_VISIBLE="FALSE" VIEWDISP="Type" VIEWTYPE="HEADER"/>
     </HEADERS>
     <SPLITTERS COLLAPSIBLE="1" HANDLEWIDTH="4" MARKER="255" ORIENTATION="1" RESIZE="1" SIZES="180,450,200" VERSION="0"/>
     <STATUS>
       <SELECTIONS>
-        <VARIABLE ID="clock_generator_0"/>
+        <VARIABLE ID="faultify_axi_wrapper_0"/>
       </SELECTIONS>
     </STATUS>
     <SEQUENCES IS_DEF_SEQUENCES="TRUE">
-      <VARIABLE ID="proc_sys_reset_0" ROW_INDEX="18"/>
+      <VARIABLE ID="proc_sys_reset_0" ROW_INDEX="19"/>
       <VARIABLE ID="microblaze_0_intc" ROW_INDEX="10"/>
       <VARIABLE ID="microblaze_0_ilmb" ROW_INDEX="3"/>
       <VARIABLE ID="microblaze_0_i_bram_ctrl" ROW_INDEX="7"/>
@@ -29,7 +29,7 @@
       <VARIABLE ID="microblaze_0_bram_block" ROW_INDEX="5"/>
       <VARIABLE ID="microblaze_0" ROW_INDEX="4"/>
       <VARIABLE ID="debug_module" ROW_INDEX="9"/>
-      <VARIABLE ID="clock_generator_0" ROW_INDEX="17"/>
+      <VARIABLE ID="clock_generator_0" ROW_INDEX="18"/>
       <VARIABLE ID="axi_timer_0" ROW_INDEX="15"/>
       <VARIABLE ID="axi4lite_0" ROW_INDEX="1"/>
       <VARIABLE ID="axi4_0" ROW_INDEX="0"/>
@@ -39,6 +39,7 @@
       <VARIABLE ID="LEDs_4Bits" ROW_INDEX="13"/>
       <VARIABLE ID="Ethernet_Lite" ROW_INDEX="11"/>
       <VARIABLE ID="DIP_Switches_4Bits" ROW_INDEX="12"/>
+      <VARIABLE ID="faultify_axi_wrapper_0" ROW_INDEX="17"/>
     </SEQUENCES>
   </SET>
 

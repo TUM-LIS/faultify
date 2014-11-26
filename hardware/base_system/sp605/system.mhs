@@ -355,4 +355,3 @@ BEGIN faultify_axi_wrapper
  PORT FAULTIFY_CLK_FAST = clk_32_0000MHzPLL0
 END
 
-
