@@ -1,24 +1,28 @@
 %% Main entrance for automated optimization
 clear all
-stelle=418;
 
 %@lowerbound;
-lb=zeros(1,418);
+lb=zeros(1,1992);
 
 %@upperbound;
-ub=0.001*ones(1,418);
+dpcp = csvread('../../simulator_software/dpcp_0_000500.txt');
+% reconstruction filter
+d = dpcp;
+d(1:1839) = 0;
+
+ub=0.0001*(d>0);
 
 % reset
 reset_decoder;
 
 % numGen
-numGen = 50;
+numGen = 10;
 
 % Setup genetic algorithm
 gaoptions = gaoptimset('PlotFcns',{@gaplotbestf,@gaplotstopping,@gaplotbestindiv,@gaplotgenealogy},...
-                        'InitialPopulation',zeros(1,418),...
+                        'InitialPopulation',zeros(1,1992),...
                         'Generations',numGen);
 
 % Run genetic optimization                    
-[X,fval,exitFlag,output,population,scores] = ga(@optimium,418,[],[],[],[],lb,ub,[],[],gaoptions);
+[X,fval,exitFlag,output,population,scores] = ga(@optimium,1992,[],[],[],[],lb,ub,[],[],gaoptions);
 save output_2.mat
