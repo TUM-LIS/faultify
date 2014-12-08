@@ -77,9 +77,9 @@ while (~doStop)
     psnr(original,faulty)
     
     % plot stuff
-    subplot(2,2,1)
-    image(faulty)
     subplot(2,2,2)
+    image(faulty)
+    subplot(2,2,1)
     image(original)
     subplot(2,2,3)
     bar(bitProbs)

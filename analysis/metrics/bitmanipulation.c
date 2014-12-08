@@ -107,3 +107,22 @@ int fp_fault_injection(double *in,unsigned int len, double *p_e) {
   return 1;
   
 }
+int binary_fault_injection(int *in,unsigned int len,unsigned int bits, double *p_e) {
+  
+  unsigned int i,b;
+  double r;
+  for (i=0;i<len;i++) {
+    for (b=0;b<bits;b++) {
+      // fault injection
+      r = ((double)rand())/RAND_MAX;
+      if (r>p_e[b]) {
+        // nothing
+      } else {
+        // toggle
+        *(unsigned long *)&in[i] ^= ((unsigned long)1 << b);
+      }
+    }  
+  }
+  return 1;
+  
+}

@@ -1,2 +1,2 @@
-gcc -c bitmanipulation.c
+gcc -c bitmanipulation.c -fPIC
 gcc -shared bitmanipulation.o -o libbitmanipulation.so
