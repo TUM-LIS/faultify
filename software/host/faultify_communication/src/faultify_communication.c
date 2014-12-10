@@ -183,9 +183,73 @@ uint8_t faultify_packet_set_packet_length(uint8_t *data,uint32_t len){
   data[13] = (uint8_t)(len >> 16) & 0xff;
   data[14] = (uint8_t)(len >> 8) & 0xff;
   data[15] = (uint8_t)(len) & 0xff;
-  return 0;
-  
+  return 0; 
 }
+
+uint8_t faultify_packet_set_cycles(uint8_t *data,uint32_t cycles){
+  data[16] = (uint8_t)(cycles >> 24) & 0xff;
+  data[17] = (uint8_t)(cycles >> 16) & 0xff;
+  data[18] = (uint8_t)(cycles >> 8) & 0xff;
+  data[19] = (uint8_t)(cycles) & 0xff;
+  return 0;   
+}
+
+
+int8_t faultify_comm_run(struct faultify_handle *ftx,uint32_t cycles,uint32_t * numErrors) {
+  uint8_t send_buffer[16+sizeof(uint32_t)*1];
+  bzero(send_buffer,16+sizeof(uint32_t)*1);
+  uint8_t recv_buffer[16+sizeof(uint32_t)*ftx->numOut];
+  bzero(recv_buffer,16+sizeof(uint32_t)*ftx->numOut);
+  //  magic number
+  faultify_packet_set_magic_number(send_buffer);
+  // type
+  faultify_packet_set_packet_type(send_buffer,cmd_run);
+  // req/answ
+  send_buffer[10] = 0x01;
+  // last 
+  send_buffer[11] = 0x01;
+  // length
+  faultify_packet_set_packet_length(send_buffer,1*sizeof(uint32_t));
+  // cycles
+  faultify_packet_set_cycles(send_buffer,cycles);
+
+  int r;
+  r = write(ftx->sockfd,send_buffer,16+sizeof(uint32_t)*1);
+  if (r<0) {
+    return 1;
+  }
+  r = read(ftx->sockfd,recv_buffer,16+sizeof(uint32_t)*ftx->numOut);
+  if (r < 0) 
+    printf("ERROR reading from socket");
+  
+  r = faultify_packet_check_sequence(recv_buffer);
+  if (r) {
+    printf("ERROR wrong magic number\n");
+  }
+  
+  if (cmd_run != faultify_packet_check_cmd_type(recv_buffer)) {
+    printf("ERROR wrong command response\n");
+  }
+  
+  if  (recv_buffer[10]) {
+    printf("ERROR not a response\n");
+  }
+  
+  if (faultify_packet_check_length(recv_buffer)!= sizeof(uint32_t)*ftx->numOut) {
+    printf("ERROR wrong response length\n");
+  }
+  
+  uint32_t i,ii;
+  ii=16;
+  for (i=0;i<ftx->numOut;i++) {
+    memcpy(&numErrors[i],&recv_buffer[ii],sizeof(uint32_t));
+    ii += sizeof(uint32_t);
+  }
+
+  return 0;
+}
+
+
 
 int8_t faultify_comm_configure(struct faultify_handle *ftx, uint32_t len,double *pe) {
   uint8_t send_buffer[16+sizeof(double)*len];

@@ -37,11 +37,13 @@
 
 
 enum commands {cmd_identify=1,
-	       cmd_configure};
+	       cmd_configure=2,
+               cmd_run=3};
 
 int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_identify(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len);
+int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len);
 
 
 

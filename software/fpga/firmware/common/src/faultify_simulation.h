@@ -29,6 +29,13 @@
 #define REG_STATUS         0x0000000F
 #define REG_TMPCNT         0x0000000A
 
+// TODO put in struct...
+unsigned int numInj;
+uint32_t numOut = 54;
+double *pe;
+
+
+
 int faultify_configure_pe(uint32_t location,uint64_t seed,uint32_t probability);
 int faultify_shift_settings(void);
 int faultify_start_simulation(uint32_t sim_cycles);

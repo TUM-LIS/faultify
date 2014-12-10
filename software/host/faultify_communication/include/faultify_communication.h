@@ -19,7 +19,8 @@
 
 
 enum commands {cmd_identify=1,
-	       cmd_configure};
+	       cmd_configure=2,
+               cmd_run=3};
 
 struct faultify_handle {
   int portno;
@@ -30,7 +31,10 @@ struct faultify_handle {
   uint8_t version_fpga_hardware[2];
   uint8_t version_host_software[2];
   uint32_t circuit_identifier;
-
+  uint32_t numInj;
+  uint32_t numIn;
+  uint32_t numOut;
+  uint32_t numCycles;
 
 };
 
@@ -39,12 +43,15 @@ int8_t faultify_comm_connect(struct faultify_handle *ftx);
 int8_t faultify_comm_disconnect(struct faultify_handle *ftx);
 int8_t faultify_comm_identify(struct faultify_handle *ftx);
 int8_t faultify_comm_configure(struct faultify_handle *ftx,uint32_t len,double *pe);
+int8_t faultify_comm_run(struct faultify_handle *ftx,uint32_t cycles,uint32_t * numErrors);
 uint8_t faultify_packet_check_sequence(uint8_t *data);
 enum commands faultify_packet_check_cmd_type(uint8_t *data);
 uint32_t faultify_packet_check_length(uint8_t *data);
 uint8_t faultify_packet_set_magic_number(uint8_t *data);
 uint8_t faultify_packet_set_packet_type(uint8_t *data,enum commands cmd);
 uint8_t faultify_packet_set_packet_length(uint8_t *data,uint32_t len);
+uint8_t faultify_packet_set_packet_length(uint8_t *data,uint32_t len);
+uint8_t faultify_packet_set_cycles(uint8_t *data,uint32_t cycles);
 
 
 /*

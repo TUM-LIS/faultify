@@ -59,11 +59,56 @@ unsigned int comm_packet_check_length(unsigned char *data) {
 
 }
 
+int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
+
+
+  // configure emulator
+  unsigned int i;
+  uint32_t result[numOut];
+  uint32_t cycles=0;
+
+  cycles = ((uint32_t)data[16] << 24) |
+    ((uint32_t)data[17] << 16) | 
+    ((uint32_t)data[18] << 8 ) |
+    (uint32_t)data[19];
+
+  faultify_run_campaign(numInj,numOut,cycles,&pe[0],&result[0]);
+  for (i=0;i<numOut;i++) {
+    xil_printf("%d\n",result[i]);
+  }
+
+  //send response
+  int send_len = 16+(sizeof(uint32_t)*numOut);
+  unsigned char send_buffer[send_len];
+  // magic number
+  comm_packet_set_magic_number(send_buffer);
+  // type
+  comm_packet_set_packet_type(send_buffer,cmd_run);
+  // req/answ
+  send_buffer[10] = 0x00;
+  // last
+  send_buffer[11] = 0x01;
+  // length
+  comm_packet_set_packet_length(send_buffer,sizeof(uint32_t)*numOut);
+
+  // payload
+  uint32_t ii=0;
+  for (i=0;i<numOut*sizeof(uint32_t);i+=sizeof(uint32_t)) {
+    memcpy(&send_buffer[16+i],&result[ii++],sizeof(uint32_t));
+  }
+
+
+
+  if (tcp_sndbuf(pcb) > send_len) {
+    tcp_write(pcb, send_buffer, send_len, 1);
+  } else
+    xil_printf("no space in tcp_sndbuf\n\r");
+  
+  return 0;
+
+}
 
 int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
-
-  unsigned int numInj;
-  double *pe;
 
   numInj = comm_packet_check_length(data)/sizeof(double);
   xil_printf("numInj = %X \n",numInj);
@@ -92,14 +137,6 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
     }
   */
 
-  // configure emulator
-  uint32_t numOut = 54;
-  uint32_t cycles = 1000000;
-  uint32_t result[numOut];
-  faultify_run_campaign(numInj,numOut,cycles,&pe[0],&result[0]);
-  for (i=0;i<numOut;i++) {
-    xil_printf("%d\n",result[i]);
-  }
 
   //send response
   int send_len = 16;
@@ -177,7 +214,10 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
     xil_printf("configure\n");
     comm_configure(pcb,data,len);
   }
-
+  if (rec_cmd == cmd_run) {
+    xil_printf("run emulator\n");
+    comm_run(pcb,data,len);
+  }
   return 0;
   
 }
