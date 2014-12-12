@@ -2,7 +2,7 @@
 
 uint32_t numOut = 54;
 uint32_t numInj;
-double * pe;
+
 
 #include <assert.h>
 
@@ -80,6 +80,7 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
     (uint32_t)data[19];
   
   faultify_run_campaign(numInj,numOut,cycles,&pe[0],&result[0]);
+  free(pe);
   /*
     for (i=0;i<numOut;i++) {
     xil_printf("%d\n",result[i]);
@@ -95,8 +96,8 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
   */
   //send response
   int send_len = 16+(sizeof(uint32_t)*numOut);
-  unsigned char * send_buffer;
-  send_buffer = (unsigned char *)malloc(sizeof(unsigned char)*send_len);
+  uint8_t * send_buffer;
+  send_buffer = (uint8_t *)malloc(sizeof(uint8_t)*send_len);
   if (send_buffer == NULL) {
     xil_printf("malloc error: %s\n",__FUNCTION__);
     return 1;
@@ -126,7 +127,6 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
     xil_printf("no space in tcp_sndbuf\n\r");
   
   free(send_buffer);
-  free(pe);
   return 0;
 
 }
@@ -134,7 +134,7 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
 int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
 
   numInj = comm_packet_check_length(data)/sizeof(double);
-  xil_printf("numInj = %d \n",numInj);
+  //xil_printf("numInj = %d \n",numInj);
   unsigned int i;
   /*
   for (i=0;i<len;i++) {
@@ -142,14 +142,15 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
   }
   xil_printf("\n");
   */
-  pe = (double *)malloc(numInj*sizeof(double));
+  
+  pe = malloc(numInj*sizeof(double));
   //xil_printf("addr: %x",pe);
   if (pe == NULL) {
-    xil_printf("malloc error\n");
+    xil_printf("malloc error - pe @ %s\n",__FUNCTION__);
     return 1;
   }
   memcpy(pe,&data[16],numInj*sizeof(double));
- 
+  
   /*
   int whole, thousandths;
   for (i=0;i<numInj;i++) {
@@ -166,7 +167,7 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
   unsigned char * send_buffer;
   send_buffer = (unsigned char *)malloc(sizeof(unsigned char)*send_len);
   if (send_buffer == NULL) {
-    xil_printf("malloc error: %s\n",__FUNCTION__);
+    xil_printf("malloc error- send_buffer @ %s\n",__FUNCTION__);
     return 1;
   }
   // magic number
@@ -184,6 +185,7 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
   } else
     xil_printf("no space in tcp_sndbuf\n\r");
 
+  free(send_buffer);
   return 0;
 }
 
@@ -245,7 +247,7 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
     //xil_printf("DBG: payloadsz: %d\n",total_payload_size);
     
     if (total_payload_size+16 > len) {
-      buffer = (uint8_t*)malloc(sizeof(uint8_t)*total_payload_size+16);
+      buffer = (uint8_t*)malloc(sizeof(uint8_t)*(total_payload_size+16));
       if (buffer == NULL) {xil_printf("malloc error\n");exit(1);}
       //xil_printf("DBG: malloced (split): %d\n",buffer);
       memcpy(&buffer[current_level],&data[0],len);
@@ -253,7 +255,7 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
       filling_up = 1;
       return 0;
     } else {
-      buffer = (uint8_t*)malloc(sizeof(uint8_t)*total_payload_size+16);
+      buffer = (uint8_t*)malloc(sizeof(uint8_t)*(total_payload_size+16));
       if (buffer == NULL) {xil_printf("malloc error\n");exit(1);}
       //xil_printf("DBG: malloced: %d\n",buffer);
       memcpy(&buffer[0],&data[0],len);
@@ -279,19 +281,21 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
   }
   
   if (rec_cmd == cmd_identify) {
-    xil_printf("identify\n");
+    //xil_printf("identify\n");
     comm_identify(pcb,buffer,total_payload_size+16);
   }
   if (rec_cmd == cmd_configure) {
-    xil_printf("configure\n");
+    //xil_printf("configure\n");
     comm_configure(pcb,buffer,total_payload_size+16);
   }
   if (rec_cmd == cmd_run) {
-    xil_printf("run emulator\n");
+    //xil_printf("run emulator\n");
     comm_run(pcb,buffer,total_payload_size+16);
+    
+
   }
 
-
+  free(buffer);
   return 0;
   
 }
