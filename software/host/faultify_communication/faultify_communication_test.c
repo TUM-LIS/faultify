@@ -30,21 +30,25 @@ int main(void) {
 	    ftx->version_fpga_hardware[0],
 	    ftx->version_fpga_hardware[1]);
   }
+
+  
   ftx->numInj = 216;
   double pe[ftx->numInj];
   int i;
   for (i=0;i<ftx->numInj;i++)
-    pe[i] = 0.01f;
+    pe[i] = 0.5f;
   
   r = faultify_comm_configure(ftx,ftx->numInj,&pe[0]);
   if (r) {
     fprintf(stderr,"failed to configure the emulator\n");
+    return 1;
   } else {
     fprintf(stderr,"configured the emulator\n");
   }
+  
 
   ftx->numOut=54;
-  ftx->numCycles = 1000;
+  ftx->numCycles = 1000000;
   uint32_t result[ftx->numOut];
   for (i=0;i<ftx->numOut;i++) {
     result[i] = 0;
@@ -58,7 +62,8 @@ int main(void) {
   for (i=0;i<ftx->numOut;i++) {
     printf("%f\n",(double)result[i]/ftx->numCycles);
   }
-
+  
+  
   r = faultify_comm_disconnect(ftx);
 
 
