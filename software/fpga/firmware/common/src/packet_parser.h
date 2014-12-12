@@ -30,6 +30,8 @@
 
 #include "faultify_simulation.h"
 
+uint8_t * buffer;
+
 // f-a-u-l
 #define MAGIC_NR_LOW 0x6661756c
 // t-i-f-y

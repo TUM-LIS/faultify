@@ -1,5 +1,12 @@
 #include "packet_parser.h"
 
+uint32_t numOut = 54;
+uint32_t numInj;
+double * pe;
+
+#include <assert.h>
+
+
 unsigned char comm_packet_set_magic_number(unsigned char *data) {
   // magic number
   data[0] = (MAGIC_NR_LOW >> 24) & 0xff;
@@ -60,26 +67,40 @@ unsigned int comm_packet_check_length(unsigned char *data) {
 }
 
 int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
-
-
+  
+  
   // configure emulator
   unsigned int i;
   uint32_t result[numOut];
   uint32_t cycles=0;
-
+  
   cycles = ((uint32_t)data[16] << 24) |
     ((uint32_t)data[17] << 16) | 
     ((uint32_t)data[18] << 8 ) |
     (uint32_t)data[19];
-
+  
   faultify_run_campaign(numInj,numOut,cycles,&pe[0],&result[0]);
-  for (i=0;i<numOut;i++) {
+  /*
+    for (i=0;i<numOut;i++) {
     xil_printf("%d\n",result[i]);
   }
-
+  */
+  /*
+  int whole, thousandths;
+  for (i=0;i<numInj;i++) {
+    whole = pe[i];
+    thousandths = (pe[i] - whole) * 1000;
+    xil_printf("%d.%d\n", whole, thousandths);
+  }
+  */
   //send response
   int send_len = 16+(sizeof(uint32_t)*numOut);
-  unsigned char send_buffer[send_len];
+  unsigned char * send_buffer;
+  send_buffer = (unsigned char *)malloc(sizeof(unsigned char)*send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
   // magic number
   comm_packet_set_magic_number(send_buffer);
   // type
@@ -96,14 +117,16 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
   for (i=0;i<numOut*sizeof(uint32_t);i+=sizeof(uint32_t)) {
     memcpy(&send_buffer[16+i],&result[ii++],sizeof(uint32_t));
   }
-
-
+  
+  
 
   if (tcp_sndbuf(pcb) > send_len) {
     tcp_write(pcb, send_buffer, send_len, 1);
   } else
     xil_printf("no space in tcp_sndbuf\n\r");
   
+  free(send_buffer);
+  free(pe);
   return 0;
 
 }
@@ -111,7 +134,7 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
 int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
 
   numInj = comm_packet_check_length(data)/sizeof(double);
-  xil_printf("numInj = %X \n",numInj);
+  xil_printf("numInj = %d \n",numInj);
   unsigned int i;
   /*
   for (i=0;i<len;i++) {
@@ -119,28 +142,33 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
   }
   xil_printf("\n");
   */
-  
-  pe = malloc(numInj*sizeof(double));
-
-  unsigned int ii;
-  ii=16;
-  for (i=0;i<numInj;i++) {
-    memcpy(&pe[i],&data[ii],sizeof(double));
-    ii += sizeof(double);
+  pe = (double *)malloc(numInj*sizeof(double));
+  //xil_printf("addr: %x",pe);
+  if (pe == NULL) {
+    xil_printf("malloc error\n");
+    return 1;
   }
+  memcpy(pe,&data[16],numInj*sizeof(double));
+ 
   /*
   int whole, thousandths;
   for (i=0;i<numInj;i++) {
     whole = pe[i];
     thousandths = (pe[i] - whole) * 1000;
-    xil_printf("%d.%3d\n", whole, thousandths);
+    xil_printf("%d.%d\n", whole, thousandths);
     }
   */
 
+  faultify_enable_circuit_reset();
 
   //send response
   int send_len = 16;
-  unsigned char send_buffer[send_len];
+  unsigned char * send_buffer;
+  send_buffer = (unsigned char *)malloc(sizeof(unsigned char)*send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
   // magic number
   comm_packet_set_magic_number(send_buffer);
   // type
@@ -155,10 +183,10 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
     tcp_write(pcb, send_buffer, send_len, 1);
   } else
     xil_printf("no space in tcp_sndbuf\n\r");
-  
+
   return 0;
 }
-  
+
 int comm_identify(struct tcp_pcb *pcb,unsigned char * data,int len) {
   
   int send_len = 20;
@@ -192,32 +220,78 @@ int comm_identify(struct tcp_pcb *pcb,unsigned char * data,int len) {
 
 int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
   
-  xil_printf("DBG: len: %d\n",len);
+  static uint8_t filling_up;
+  static enum commands rec_cmd;
+  static uint32_t current_level;
+  static uint32_t total_payload_size;
+
+  int i;
+  //printf("DBG: len: %d\n",len);
   if (len<16) {
     return 1;
   }
-  
-  /* check for magic sequence */
-  if (comm_packet_check_sequence(data)) {
-    return 1;
+  if (!filling_up) {
+    
+    /* check for magic sequence */
+    if (comm_packet_check_sequence(data)) {
+      return 1;
+    }
+    /* command type */
+    rec_cmd = comm_packet_check_cmd_type(data);
+    //xil_printf("DBG: cmd: %d\n",rec_cmd);
+    
+    /* total payload size */
+    total_payload_size = comm_packet_check_length(data);
+    //xil_printf("DBG: payloadsz: %d\n",total_payload_size);
+    
+    if (total_payload_size+16 > len) {
+      buffer = (uint8_t*)malloc(sizeof(uint8_t)*total_payload_size+16);
+      if (buffer == NULL) {xil_printf("malloc error\n");exit(1);}
+      //xil_printf("DBG: malloced (split): %d\n",buffer);
+      memcpy(&buffer[current_level],&data[0],len);
+      current_level = len;
+      filling_up = 1;
+      return 0;
+    } else {
+      buffer = (uint8_t*)malloc(sizeof(uint8_t)*total_payload_size+16);
+      if (buffer == NULL) {xil_printf("malloc error\n");exit(1);}
+      //xil_printf("DBG: malloced: %d\n",buffer);
+      memcpy(&buffer[0],&data[0],len);
+      filling_up = 0;
+      current_level = 0;
+    }
+    
+  } else {
+    //xil_printf("DBG: currentlvl: %d\n",current_level);
+    if ((current_level+len)== total_payload_size+16) {
+      filling_up = 0;
+      //xil_printf("current level %d",current_level);
+      memcpy(&buffer[current_level],&data[0],len);
+      current_level = 0;
+    } else {
+      filling_up = 1;
+      //xil_printf("current level %d",current_level);
+      memcpy(&buffer[current_level],&data[0],len);
+      current_level += len;
+      return 0;
+    }
+    
   }
-  
-  /* command type */
-  enum commands rec_cmd;
-  rec_cmd = comm_packet_check_cmd_type(data);
   
   if (rec_cmd == cmd_identify) {
     xil_printf("identify\n");
-    comm_identify(pcb,data,len);
+    comm_identify(pcb,buffer,total_payload_size+16);
   }
   if (rec_cmd == cmd_configure) {
     xil_printf("configure\n");
-    comm_configure(pcb,data,len);
+    comm_configure(pcb,buffer,total_payload_size+16);
   }
   if (rec_cmd == cmd_run) {
     xil_printf("run emulator\n");
-    comm_run(pcb,data,len);
+    comm_run(pcb,buffer,total_payload_size+16);
   }
+
+
   return 0;
   
 }

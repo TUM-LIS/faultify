@@ -29,10 +29,6 @@
 #define REG_STATUS         0x0000000F
 #define REG_TMPCNT         0x0000000A
 
-// TODO put in struct...
-unsigned int numInj;
-uint32_t numOut = 54;
-double *pe;
 
 
 

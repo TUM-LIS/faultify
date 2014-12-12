@@ -7,6 +7,9 @@
 #include "xil_printf.h"
 #endif
 
+#include <stdint.h>
+#include <stdlib.h>
+#include "packet_parser.h"
 /* defined by each RAW mode application */
 void print_app_header();
 int start_application();
@@ -38,6 +41,14 @@ print_ip_settings(struct ip_addr *ip, struct ip_addr *mask, struct ip_addr *gw)
 
 int main()
 {
+  /* 
+  buffer = (uint8_t*)malloc(8192);
+  if (buffer == NULL) {
+    xil_printf("malloc error\n");
+    exit(1);
+  }
+  */
+  //return 1;
 	struct ip_addr ipaddr, netmask, gw;
 
 	/* the mac address of the board. this should be unique per board */
