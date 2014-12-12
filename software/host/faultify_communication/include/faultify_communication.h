@@ -28,6 +28,7 @@ struct faultify_handle {
   int portno;
   int sockfd;
   struct hostent *server;
+
   struct sockaddr_in serv_addr;
   uint8_t version_fpga_software[2];
   uint8_t version_fpga_hardware[2];
