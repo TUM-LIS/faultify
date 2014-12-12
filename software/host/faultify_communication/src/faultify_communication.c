@@ -236,7 +236,10 @@ int8_t faultify_comm_run(struct faultify_handle *ftx,uint32_t cycles,uint32_t * 
   }
   
   if (faultify_packet_check_length(recv_buffer)!= sizeof(uint32_t)*ftx->numOut) {
+    printf("resp len: %u\n",faultify_packet_check_length(recv_buffer));
+    printf("expected: %lu\n",sizeof(uint32_t)*ftx->numOut);
     printf("ERROR wrong response length\n");
+    exit(1);
   }
   
   uint32_t i,ii;
