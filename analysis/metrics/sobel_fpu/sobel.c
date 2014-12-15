@@ -24,7 +24,17 @@ int main(int argc, char * argv[])
   unsigned char *Input_Image_ptr;
   unsigned char *Output_Image_ptr;
   
+  FILE *fh1,*fh2,*fh3;
+  fh1 = fopen(argv[1],"r");
+  fh2 = fopen(argv[2],"r");
+  fh3 = fopen(argv[3],"r");
   
+  double pe1[64],pe2[64],pe3[64];
+  
+  
+
+
+
   /*******************************************************************************************/
   
   
