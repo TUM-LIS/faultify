@@ -32,7 +32,7 @@ for grr=1:numel(snr)
 g_pwr = pwr_c(:,:,grr);
 g_ser = ser_c(:,:,grr);
 
-[idx] = find(g_ser<=0.01);
+[idx] = find(g_ser<=max_ser);
 [minPwr, minPos] = max(g_pwr(idx));
 
 figure(grr)
