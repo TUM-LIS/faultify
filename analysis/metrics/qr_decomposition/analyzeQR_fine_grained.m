@@ -19,14 +19,14 @@ loadlibrary libbitmanipulation.so ../bitmanipulation.h
 
 
 type = 2;
-fullBitReduction_Q = 6;
+fullBitReduction_Q = 7;
 fullBitReduction_R = 6;
 bits = 12;
 pQ = zeros(1,bits);
 pR = zeros(1,bits);
 opt_pQ = zeros(1,bits);
 opt_pR = zeros(1,bits);
-snr = 40;
+snr = 50;
 max_ser = 0.01;
 
 %% linear
@@ -92,4 +92,4 @@ opt_pR(fullBitReduction_R+1:end) = gradient_R.*pr(opt_fac_R);
 
 end
 
-save res_fine_40_6_6.mat ser_f pwr_f
+save res_fine_50_7_6.mat ser_f pwr_f
