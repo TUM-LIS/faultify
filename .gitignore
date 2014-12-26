@@ -10,3 +10,11 @@ parser.cpp
 parser.hpp
 tokens.cpp
 *.yuv
+hardware/base_system/ml605/SDK/
+hardware/base_system/ml605/hdl/
+hardware/base_system/ml605/implementation/
+hardware/base_system/ml605/synthesis/
+hardware/base_system/ml605/system.bsb
+hardware/base_system/sp605/hdl/
+hardware/base_system/sp605/implementation/
+hardware/base_system/sp605/synthesis/
