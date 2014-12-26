@@ -1,3 +1,4 @@
+%%
 clear all
 close all
 
@@ -12,15 +13,15 @@ loadlibrary libbitmanipulation.so ../bitmanipulation.h
 %opt_pwr =
 %    6.5000    6.0000    5.5000
 %opt_bits_Q =
-%     7     6     5
+%     6     6     5
 %opt_bits_R =
-%     6     6     6
+%     7     6     6
 
 
 
 type = 2;
-fullBitReduction_Q = 7;
-fullBitReduction_R = 6;
+fullBitReduction_Q = 6;
+fullBitReduction_R = 7;
 bits = 12;
 pQ = zeros(1,bits);
 pR = zeros(1,bits);
@@ -44,8 +45,8 @@ gradient_Q = (exp(bits-fullBitReduction_Q-1:-1:0)./max(exp(1:bits-fullBitReducti
 gradient_Q = gradient_Q./max(gradient_Q);
 gradient_R = (exp(bits-fullBitReduction_R-1:-1:0)./max(exp(1:bits-fullBitReduction_R-1))*(fullBitReduction_R-1));
 gradient_R = gradient_R./max(gradient_R);
-pq = 0:0.0005:0.02;
-pr = 0:0.0005:0.02;
+pq = 0:0.001:0.02;
+pr = 0:0.001:0.02;
 end
 
 
@@ -83,13 +84,13 @@ plot3(x,y,g_ser(idx),'r.')
 plot3(x(ind2sub(size(g_ser),minPos)),y(ind2sub(size(g_ser),minPos)),g_ser(idx(minPos)),'g*')
 
 opt_pwr(grr) = minPwr;
-opt_fac_Q(grr) = x(ind2sub(size(g_ser),minPos));
-opt_fac_R(grr) = y(ind2sub(size(g_ser),minPos));
+opt_fac_R(grr) = x(ind2sub(size(g_ser),minPos));
+opt_fac_Q(grr) = y(ind2sub(size(g_ser),minPos));
 opt_pQ(1:fullBitReduction_Q) = 0.5;
 opt_pQ(fullBitReduction_Q+1:end) = gradient_Q.*pq(opt_fac_Q);
 opt_pR(1:fullBitReduction_R) = 0.5;
 opt_pR(fullBitReduction_R+1:end) = gradient_R.*pr(opt_fac_R);
 
 end
-
-save res_fine_50_7_6.mat ser_f pwr_f
+%%
+%save res_fine_50_6_7.mat ser_f pwr_f

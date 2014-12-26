@@ -43,8 +43,8 @@ plot3(x,y,g_ser(idx),'r.')
 plot3(x(ind2sub(size(g_ser),minPos)),y(ind2sub(size(g_ser),minPos)),g_ser(idx(minPos)),'g*')
 
 opt_pwr(grr) = minPwr;
-opt_fac_Q(grr) = x(ind2sub(size(g_ser),minPos));
-opt_fac_R(grr) = y(ind2sub(size(g_ser),minPos));
+opt_fac_R(grr) = x(ind2sub(size(g_ser),minPos));
+opt_fac_Q(grr) = y(ind2sub(size(g_ser),minPos));
 
 
 end

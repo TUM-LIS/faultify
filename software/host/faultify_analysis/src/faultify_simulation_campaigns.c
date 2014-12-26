@@ -84,8 +84,8 @@ int faultify_simulation_create_probability_relation_matrix(uint32_t numCycles) {
     }
     // recovery run
     faultify_comm_configure(fsc.ftx,fsc.numInj,zeros);
-    faultify_comm_run(fsc.ftx,1000,soe_out);
-
+    faultify_comm_run(fsc.ftx,10000,soe_out);
+  
   }
   fprintf(stderr,"\n");
 
@@ -154,19 +154,7 @@ int faultify_simulation_find_data_path_registers() {
     }
   }
   
-  // debug stuff
-  if (fsc.debug == 1) {
-    faultify_simulation_print_array(tmp);
-    for (j=0;j<fsc.numOut;j++) {
-      fprintf(stderr,"%u ",fsc.probability_relation_matrix[(290*fsc.numOut)+j]);
-    }
-    fprintf(stderr,"\n");
-    for (j=0;j<fsc.numOut;j++) {
-      fprintf(stderr,"%u ",fsc.probability_relation_matrix_p_0_5[(290*fsc.numOut)+j]);
-    }
-    fprintf(stderr,"\n");
-  }
-  
+ 
   
   for (i=0;i<fsc.numInj;i++) {
     isValid = 1;

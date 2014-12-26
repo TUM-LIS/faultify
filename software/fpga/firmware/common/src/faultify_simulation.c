@@ -41,11 +41,13 @@ uint32_t write_to_sim(uint32_t addr,uint32_t data){
 /* Bit-order reversion */
 uint32_t faultify_reverse(register uint32_t x)
 {
+
   x = (((x & 0xaaaaaaaa) >> 1) | ((x & 0x55555555) << 1));
   x = (((x & 0xcccccccc) >> 2) | ((x & 0x33333333) << 2));
   x = (((x & 0xf0f0f0f0) >> 4) | ((x & 0x0f0f0f0f) << 4));
   x = (((x & 0xff00ff00) >> 8) | ((x & 0x00ff00ff) << 8));
   return((x >> 16) | (x << 16));
+
 }
 
 /* floating point to fixed 0:32 conversion */
@@ -174,7 +176,7 @@ void faultify_run_campaign(uint32_t numInj,
   
   faultify_poll_for_idle();
   for (i=0;i<numInj;i++) {
-    myRandomInteger = i;
+    myRandomInteger = 1234*i+9985983;
     faultify_configure_pe(numInj-1-i,myRandomInteger,faultify_prob_conv(probs[i]));
     faultify_poll_for_idle();
   }

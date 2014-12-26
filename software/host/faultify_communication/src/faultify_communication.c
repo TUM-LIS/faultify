@@ -16,7 +16,7 @@ int8_t faultify_comm_init(struct faultify_handle **ftx) {
   // timeout
   struct timeval tv;
 
-  tv.tv_sec = 5;  // 5 sec too much/less?
+  tv.tv_sec = 20;  // 5 sec too much/less?
   tv.tv_usec = 0;  
   setsockopt(fh->sockfd, SOL_SOCKET,
 	     SO_RCVTIMEO, (char *)&tv,
@@ -271,14 +271,25 @@ int8_t faultify_comm_configure(struct faultify_handle *ftx, uint32_t len,double 
   
   // length
   faultify_packet_set_packet_length(send_buffer,len*sizeof(double));
-
+  //printf("DBG: packet length field: %lu\n",len*sizeof(double));
   uint32_t i,ii;
   i = 0;
   for (ii=0;ii<len*sizeof(double);ii+=sizeof(double)) {
     memcpy(&send_buffer[16+ii],&pe[i++],sizeof(double));
   }
   int r;
-  r = write(ftx->sockfd,send_buffer,16+sizeof(double)*len);
+  int pkg=0,idx=0;
+  for (pkg=0;pkg<((16+sizeof(double)*len)/1024);pkg++) {
+  	r = write(ftx->sockfd,&send_buffer[pkg*1024],1024);
+  	if (r<0) {
+    		return 1;
+  	} else {
+		idx +=1024;
+	}
+	usleep(100000);
+  }
+  //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
+  r = write(ftx->sockfd,&send_buffer[idx],(16+sizeof(double)*len)-(pkg*1024));
   if (r<0) {
     return 1;
   }

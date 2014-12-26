@@ -1,6 +1,12 @@
 #include "packet_parser.h"
 
-uint32_t numOut = 54;
+// TODO: store in HW
+// b14
+//uint32_t numOut = 54;
+// fpu100_add
+//uint32_t numOut = 41;
+// qr
+uint32_t numOut = 202;
 uint32_t numInj;
 
 
@@ -78,7 +84,12 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
     ((uint32_t)data[17] << 16) | 
     ((uint32_t)data[18] << 8 ) |
     (uint32_t)data[19];
-  
+
+	/*
+  for (i=0;i<numInj;i++) {
+    printf("%f\n",pe[i]);
+  }
+*/
   faultify_run_campaign(numInj,numOut,cycles,&pe[0],&result[0]);
   free(pe);
   /*
@@ -136,7 +147,8 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len) {
   numInj = comm_packet_check_length(data)/sizeof(double);
   //xil_printf("numInj = %d \n",numInj);
   unsigned int i;
-  /*
+  
+	/*
   for (i=0;i<len;i++) {
     xil_printf("%X ",data[i]);
   }
@@ -229,9 +241,7 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
 
   int i;
   //printf("DBG: len: %d\n",len);
-  if (len<16) {
-    return 1;
-  }
+ 
   if (!filling_up) {
     
     /* check for magic sequence */
@@ -249,7 +259,7 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
     if (total_payload_size+16 > len) {
       buffer = (uint8_t*)malloc(sizeof(uint8_t)*(total_payload_size+16));
       if (buffer == NULL) {xil_printf("malloc error\n");exit(1);}
-      //xil_printf("DBG: malloced (split): %d\n",buffer);
+      //xil_printf("DBG: malloced (split): %x\n",buffer);
       memcpy(&buffer[current_level],&data[0],len);
       current_level = len;
       filling_up = 1;
@@ -257,7 +267,7 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
     } else {
       buffer = (uint8_t*)malloc(sizeof(uint8_t)*(total_payload_size+16));
       if (buffer == NULL) {xil_printf("malloc error\n");exit(1);}
-      //xil_printf("DBG: malloced: %d\n",buffer);
+      //xil_printf("DBG: malloced: %x\n",buffer);
       memcpy(&buffer[0],&data[0],len);
       filling_up = 0;
       current_level = 0;
@@ -267,12 +277,12 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
     //xil_printf("DBG: currentlvl: %d\n",current_level);
     if ((current_level+len)== total_payload_size+16) {
       filling_up = 0;
-      //xil_printf("current level %d",current_level);
+      //xil_printf("current level (final)%d\n",current_level);
       memcpy(&buffer[current_level],&data[0],len);
       current_level = 0;
     } else {
       filling_up = 1;
-      //xil_printf("current level %d",current_level);
+      //xil_printf("current level (cont.)%d\n",current_level);
       memcpy(&buffer[current_level],&data[0],len);
       current_level += len;
       return 0;
