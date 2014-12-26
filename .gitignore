@@ -18,3 +18,4 @@ hardware/base_system/ml605/system.bsb
 hardware/base_system/sp605/hdl/
 hardware/base_system/sp605/implementation/
 hardware/base_system/sp605/synthesis/
+software/fpga/bsps/ml605/microblaze_0/
