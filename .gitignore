@@ -6,3 +6,7 @@
 *.a
 *.log
 *#
+parser.cpp
+parser.hpp
+tokens.cpp
+*.yuv
