@@ -84,11 +84,11 @@ for(out=34;out<40;out++) /*fpu100*/
     fsc.max_output_error_probability[out] = 0.5f;
 #endif
 #if qr
-  for(out=2;out<193;out++) /*b14*/
+  for(out=2;out<194;out++) /*QR*/
     fsc.max_output_error_probability[out] = 0.5f;
 #endif
 
- fsc.simCycles = 100000;
+ fsc.simCycles = 10000000;
 
   faultify_simulation_create_probability_relation_matrix(fsc.simCycles);
 

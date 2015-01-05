@@ -176,7 +176,7 @@ void faultify_run_campaign(uint32_t numInj,
   
   faultify_poll_for_idle();
   for (i=0;i<numInj;i++) {
-    myRandomInteger = 1234*i+9985983;
+    myRandomInteger = rand()+1;//1234*i+9985983;
     faultify_configure_pe(numInj-1-i,myRandomInteger,faultify_prob_conv(probs[i]));
     faultify_poll_for_idle();
   }

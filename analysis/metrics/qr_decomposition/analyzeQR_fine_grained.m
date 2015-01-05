@@ -9,13 +9,13 @@ loadlibrary libbitmanipulation.so ../bitmanipulation.h
 
 % from coarse grained opt
 %snr =
-%    50    40    30
+%    60     50    40    30
 %opt_pwr =
-%    6.5000    6.0000    5.5000
+%    6.5    6.5   6.0   5.5
 %opt_bits_Q =
-%     6     6     5
+%     6     6     6     5
 %opt_bits_R =
-%     7     6     6
+%     7     7     6     6
 
 
 
@@ -45,8 +45,10 @@ gradient_Q = (exp(bits-fullBitReduction_Q-1:-1:0)./max(exp(1:bits-fullBitReducti
 gradient_Q = gradient_Q./max(gradient_Q);
 gradient_R = (exp(bits-fullBitReduction_R-1:-1:0)./max(exp(1:bits-fullBitReduction_R-1))*(fullBitReduction_R-1));
 gradient_R = gradient_R./max(gradient_R);
-pq = 0:0.001:0.02;
-pr = 0:0.001:0.02;
+pq = 0:0.001:0.02; % 50_6_7
+pr = 0:0.001:0.02; % 50_6_7
+%pq = 0:0.0001:0.01; % 40_6_6
+%pr = 0:0.0001:0.01; % 40_6_6
 end
 
 
@@ -93,4 +95,4 @@ opt_pR(fullBitReduction_R+1:end) = gradient_R.*pr(opt_fac_R);
 
 end
 %%
-%save res_fine_50_6_7.mat ser_f pwr_f
+%save res_fine_40_6_6.mat ser_f pwr_f

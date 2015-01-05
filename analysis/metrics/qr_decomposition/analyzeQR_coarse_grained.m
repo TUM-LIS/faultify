@@ -6,7 +6,7 @@ loadlibrary libbitmanipulation.so ../bitmanipulation.h
 
 %% setup
 % set of snrs
-snr = [50 40 30];
+snr = [20];
 % fixed point
 bits=12;
 % upper limit for ser
@@ -21,7 +21,7 @@ for iq = 1:bits
         pR = zeros(1,bits);
         pR(1:ir)  = 0.5;
         for i=1:numel(snr)
-            ser_c(iq,ir,i) = zf_mimo_8x8_fixed_point(1E4,snr(i),bits,pQ,pR);
+            ser_c(iq,ir,i) = zf_mimo_8x8_fixed_point(1E5,snr(i),bits,pQ,pR);
             pwr_c(iq,ir,i) = sum(pQ)+sum(pR);
         end
     end
