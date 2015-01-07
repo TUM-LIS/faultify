@@ -25,9 +25,9 @@ void ProbabilityInjection::execute(IR* ir,string toplevel,vector<string> element
     for (vector<Module*>::iterator it = mod.begin(); it != mod.end(); ++it) {
 	// dgb
 	//cout << (*it)->getName() << ":" << (*it)->getName().compare("Inter_pred") << endl;
-	//if (((*it)->getName().compare("Inter") > 1) || ((*it)->getName().compare("Intra") > 1)) 
-	//{
-	//cout << "got module..." << endl;
+	if (((*it)->getName().compare("serial_div") == 0) || ((*it)->getName().compare("pre_norm_div") == 0) || ((*it)->getName().compare("post_norm_div") == 0)) 
+	{
+	cout << "got module..." << endl;
 	// dbg
       vector<Instantiation*> inst = (*it)->getInstantiations();
       vector<string> errorNets;
@@ -90,7 +90,7 @@ void ProbabilityInjection::execute(IR* ir,string toplevel,vector<string> element
 	errorNets.clear();
       }
 	// dbg
-	//}
+	}
 	// dbg
     } 
     cout << "replaced " << count << " " << elements[i] << "\n";
