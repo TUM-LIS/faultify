@@ -7,7 +7,8 @@
 
 #define b14 0
 #define fpu100 0
-#define qr 1
+#define qr 0
+#define viterbi 1
 
 #if b14
 #define numInj 216
@@ -26,6 +27,13 @@
 #define numIn 111
 #define numOut 202
 #endif
+
+#if viterbi
+#define numInj 282
+#define numIn 69
+#define numOut 5
+#endif
+
 
 struct faultify_handle *ftx;
 
@@ -86,6 +94,10 @@ for(out=34;out<40;out++) /*fpu100*/
 #if qr
   for(out=2;out<194;out++) /*QR*/
     fsc.max_output_error_probability[out] = 0.5f;
+#endif
+
+#if viterbi
+    fsc.max_output_error_probability[2] = 0.5f;
 #endif
 
  fsc.simCycles = 10000000;
