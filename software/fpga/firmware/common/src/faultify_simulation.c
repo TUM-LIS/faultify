@@ -163,6 +163,44 @@ void faultify_disable_circuit_reset(void) {
   write_to_sim(REG_RESET,0);
 }
 
+/* start a free run */
+void faultify_start_free_campaign(uint32_t numInj,
+				  uint32_t numOut,
+				  double * probs) {
+  
+  uint64_t myRandomInteger;
+  int i;
+  
+  faultify_poll_for_idle();
+  for (i=0;i<numInj;i++) {
+    myRandomInteger = rand()+1;//1234*i+9985983;
+    faultify_configure_pe(numInj-1-i,myRandomInteger,faultify_prob_conv(probs[i]));
+    faultify_poll_for_idle();
+  }
+  
+  // store settings
+  faultify_shift_settings();
+  faultify_poll_for_idle();
+  
+  // start simulation
+  faultify_start_free_simulation();
+}
+
+/* stop a free campaign */
+void faultify_stop_free_campaign(uint32_t numOut,
+				 uint32_t * cycles,
+				 uint32_t * result) {
+  
+  faultify_stop_free_simulation();
+  *cycles = faultify_read_cycle_count(0);
+  int i;
+  // readback errors
+  for (i=0;i<numOut;i++) {
+    faultify_read_num_errors(i,&result[i]);
+  }
+  
+}
+
 
 /* run one campaign */
 void faultify_run_campaign(uint32_t numInj,
@@ -187,7 +225,73 @@ void faultify_run_campaign(uint32_t numInj,
   
   // start simulation
   faultify_start_simulation(numCycles);
-  
+#if 0
+static int32_t llr[412] = {-6,-5,-3,5,-3,-6,4,3,-5,3,-6,7,-2,-8,0,5,-7,-2,-4,-4,-7,
+		4,-5,7,-4,0,-3,7,3,0,-3,4,0,3,7,4,0,4,4,-8,6,-4,0,3,-3,-3,7,-2,-2,-6,3,-3,4,
+		3,-2,-4,2,-1,-8,0,7,6,7,-4,-4,5,-5,5,-2,-1,3,7,3,2,4,-8,1,3,-1,2,-2,2,3,1,0,
+		3,5,-6,-5,6,7,0,-5,-6,-8,2,3,-2,-5,-2,-5,0,1,0,4,-8,7,0,5,-6,-5,2,2,-1,0,-3,
+		-2,-2,-2,0,-4,3,-4,-5,1,-4,3,6,2,-8,3,-7,6,3,-1,-2,7,2,0,2,-2,-2,-7,3,-8,6,
+		1,0,0,-5,1,5,-3,2,4,6,-2,5,-6,-7,-4,-2,1,-5,1,-8,-3,4,4,-5,-2,6,6,0,3,4,-3,
+		-5,-5,0,-5,5,7,-6,6,2,4,-4,7,-1,0,-1,0,1,4,0,7,7,6,2,0,-3,-1,-5,-7,3,7,-4,
+		3,4,0,-1,5,-5,-6,6,3,-8,-2,-4,3,0,-7,6,-5,5,-4,4,7,6,-2,-8,2,7,5,3,-2,-5,
+		-2,-3,-7,0,4,-2,-3,7,-5,-8,2,0,0,-7,-3,6,1,1,-3,4,-8,2,3,7,6,-4,4,-1,-2,
+		4,7,0,-1,-2,-2,0,7,-3,-1,-4,-3,0,-5,1,-3,4,3,4,4,7,1,7,1,2,-1,0,7,5,6,6,
+		2,7,-1,-2,0,-4,0,-2,7,-7,5,6,3,0,-5,4,-2,1,6,0,7,5,5,7,7,-6,0,-6,6,-2,
+		-3,-8,1,-3,0,5,1,7,7,4,-6,-8,-1,2,-2,5,7,0,-2,4,-5,0,4,-5,1,3,4,-5,6,
+		-8,-1,6,5,-6,3,4,3,-6,6,0,-7,-7,6,0,4,-4,1,-2,-2,-3,0,1,5,-4,-3,-1,0,
+		-5,3,1,-6,7,-3,3,3,-6,-5,-1,-5,7,3,-5,-2,0,0,-6,3,0,-6,7,-5,3,-7,1};
+
+#endif
+  #if 0
+
+XLlFifo * ctrl_fifo;
+    XLlFifo * data_fifo;
+
+    ctrl_fifo = malloc(sizeof(XLlFifo));
+data_fifo = malloc(sizeof(XLlFifo));
+if (data_fifo==NULL)
+	   print("malloc error data_fifo...");
+if (ctrl_fifo==NULL)
+	   print("malloc error ctrl_fifo...");
+  XLlFifo_Initialize(ctrl_fifo, XPAR_AXI_FIFO_MM_S_CTRL_BASEADDR);
+    XLlFifo_Initialize(data_fifo, XPAR_AXI_FIFO_MM_S_DATA_BASEADDR);
+  uint32_t config_data=0;
+    config_data = (55 << 16);
+    config_data |= 50;
+
+      print("Config Decoder...");
+    XLlFifo_Write(ctrl_fifo, &config_data, 4);
+    XLlFifo_TxSetLen(ctrl_fifo, 4);
+      print("done\n");
+
+   print("Transmitting one Block...");
+  int fr=0;
+    uint32_t temp1,temp2,temp3;
+    for (fr=0;fr<412;fr+=2) {
+    	temp3 = 0;
+    	temp1 = (llr[fr] & 0xF);
+    	temp2 = (llr[fr+1] & 0xF);
+    	temp3 = temp2 << 8;
+    	temp3 |= temp1;
+    	XLlFifo_Write(data_fifo, &temp3, 4);
+ 	}
+      	XLlFifo_TxSetLen(data_fifo, 412*4/2);
+    print("done\n");
+ uint32_t buffer;
+
+	while (XLlFifo_RxOccupancy(data_fifo)) {
+	    //xil_printf("%x\n",XLlFifo_RxOccupancy(data_fifo));
+ 		int frame_len = XLlFifo_RxGetLen(data_fifo);
+		while (frame_len) {
+ 			XLlFifo_Read(data_fifo, &buffer, 4);
+ 			xil_printf("%x\n",buffer);
+ 			frame_len -= 4;
+		}
+ 	}
+
+free(data_fifo);
+free(ctrl_fifo);
+#endif
   // wait 
   faultify_poll_for_idle();
   

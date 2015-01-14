@@ -3,6 +3,7 @@
 #include "netif/xadapter.h"
 #include "platform.h"
 #include "platform_config.h"
+
 #ifdef __arm__
 #include "xil_printf.h"
 #endif
@@ -39,16 +40,11 @@ print_ip_settings(struct ip_addr *ip, struct ip_addr *mask, struct ip_addr *gw)
 	print_ip("Gateway : ", gw);
 }
 
+
+
 int main()
 {
-  /* 
-  buffer = (uint8_t*)malloc(8192);
-  if (buffer == NULL) {
-    xil_printf("malloc error\n");
-    exit(1);
-  }
-  */
-  //return 1;
+
 	struct ip_addr ipaddr, netmask, gw;
 
 	/* the mac address of the board. this should be unique per board */

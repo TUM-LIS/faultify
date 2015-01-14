@@ -6,7 +6,9 @@
 // fpu100_add
 //uint32_t numOut = 41;
 // qr
-uint32_t numOut = 202;
+//uint32_t numOut = 202;
+// viterbi
+uint32_t numOut = 5;
 uint32_t numInj;
 
 
@@ -71,6 +73,91 @@ unsigned int comm_packet_check_length(unsigned char *data) {
 	    (unsigned int)data[15]           );
 
 }
+
+
+int comm_start_free_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
+ 
+ // start simulator
+  faultify_start_free_campaign(numInj,numOut,&pe[0]);
+
+
+  //send response
+  int send_len = 16;
+  uint8_t * send_buffer;
+  send_buffer = (uint8_t *)malloc(sizeof(uint8_t)*send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
+  // magic number
+  comm_packet_set_magic_number(send_buffer);
+  // type
+  comm_packet_set_packet_type(send_buffer,cmd_start_free_run);
+  // req/answ
+  send_buffer[10] = 0x00;
+  // last
+  send_buffer[11] = 0x01;
+  // length
+  comm_packet_set_packet_length(send_buffer,0);
+  // payload
+  if (tcp_sndbuf(pcb) > send_len) {
+    tcp_write(pcb, send_buffer, send_len, 1);
+  } else
+    xil_printf("no space in tcp_sndbuf\n\r");
+  
+  free(send_buffer);
+  return 0;
+
+}
+int comm_stop_free_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
+
+  uint32_t result[numOut];
+  uint32_t cycles=0;
+
+  faultify_stop_free_campaign(numOut,&cycles,&result[0]);
+  free(pe);
+
+  //send response
+  int send_len = 16+(sizeof(uint32_t)*(numOut+1));
+  uint8_t * send_buffer;
+  send_buffer = (uint8_t *)malloc(sizeof(uint8_t)*send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
+  // magic number
+  comm_packet_set_magic_number(send_buffer);
+  // type
+  comm_packet_set_packet_type(send_buffer,cmd_stop_free_run);
+  // req/answ
+  send_buffer[10] = 0x00;
+  // last
+  send_buffer[11] = 0x01;
+  // length
+  comm_packet_set_packet_length(send_buffer,sizeof(uint32_t)*numOut);
+
+  // payload
+  uint32_t i,ii=0;
+  for (i=0;i<numOut*sizeof(uint32_t);i+=sizeof(uint32_t)) {
+    memcpy(&send_buffer[16+i],&result[ii++],sizeof(uint32_t));
+  }  
+  xil_printf("%x\n",cycles);
+  memcpy(&send_buffer[16+i],&cycles,sizeof(uint32_t));
+  //for (i=0;i<send_len;i++)
+  //xil_printf("%x\n",send_buffer[i]);
+
+
+  
+
+  if (tcp_sndbuf(pcb) > send_len) {
+    tcp_write(pcb, send_buffer, send_len, 1);
+  } else
+    xil_printf("no space in tcp_sndbuf\n\r");
+  
+  free(send_buffer);
+  return 0;
+}
+
 
 int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
   
@@ -301,8 +388,14 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
   if (rec_cmd == cmd_run) {
     //xil_printf("run emulator\n");
     comm_run(pcb,buffer,total_payload_size+16);
-    
-
+  }
+  if (rec_cmd == cmd_start_free_run) {
+    //xil_printf("run emulator\n");
+    comm_start_free_run(pcb,buffer,total_payload_size+16);
+  }
+if (rec_cmd == cmd_stop_free_run) {
+    //xil_printf("run emulator\n");
+    comm_stop_free_run(pcb,buffer,total_payload_size+16);
   }
 
   free(buffer);
