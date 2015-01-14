@@ -32,7 +32,7 @@ int main(void) {
   }
 
   
-  ftx->numInj = 216;
+  ftx->numInj = 282;
   double pe[ftx->numInj];
   int i;
   for (i=0;i<ftx->numInj;i++)
@@ -47,8 +47,8 @@ int main(void) {
   }
   
 
-  ftx->numOut=54;
-  ftx->numCycles = 1000000;
+  ftx->numOut=5;
+  ftx->numCycles = 100000;
   uint32_t result[ftx->numOut];
   for (i=0;i<ftx->numOut;i++) {
     result[i] = 0;
@@ -63,7 +63,22 @@ int main(void) {
     printf("%f\n",(double)result[i]/ftx->numCycles);
   }
   
-  
+  r = faultify_comm_start_free_run(ftx);
+  if (r) {
+    fprintf(stderr,"failed to start a free run\n");
+  } else {
+    fprintf(stderr,"started free run\n");
+  }
+
+  sleep(1);
+
+  r = faultify_comm_stop_free_run(ftx,&(ftx->numCycles),result);
+  printf("%u\n",ftx->numCycles);
+  for (i=0;i<ftx->numOut;i++) {
+    printf("%u\n",result[i]);
+  }
+
+
   r = faultify_comm_disconnect(ftx);
 
 
