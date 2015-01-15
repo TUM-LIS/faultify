@@ -194,6 +194,68 @@ uint8_t faultify_packet_set_cycles(uint8_t *data,uint32_t cycles){
   return 0;   
 }
 
+int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, uint32_t len, uint8_t *decoded) {
+ uint8_t send_buffer[16+len];
+  bzero(send_buffer,16);
+  uint8_t recv_buffer[16+(len/2-6)];
+  bzero(recv_buffer,16);
+  //  magic number
+  faultify_packet_set_magic_number(send_buffer);
+  // type
+  faultify_packet_set_packet_type(send_buffer,cmd_user_data_type_1);
+  // req/answ
+  send_buffer[10] = 0x01;
+  // last 
+  send_buffer[11] = 0x01;
+  // length
+  faultify_packet_set_packet_length(send_buffer,len*sizeof(uint8_t));
+
+  int ii;
+  for (ii=0;ii<len;ii++) {
+    memcpy(&send_buffer[16+ii],&llr[ii],sizeof(uint8_t));
+  }
+  int r;
+  r = write(ftx->sockfd,send_buffer,16+(len*sizeof(uint8_t)));
+  if (r<0) {
+    return 1;
+  }
+  r = read(ftx->sockfd,recv_buffer,16+(len/2-6));
+  if (r < 0) 
+    printf("ERROR reading from socket");
+  
+  r = faultify_packet_check_sequence(recv_buffer);
+  if (r) {
+    printf("ERROR wrong magic number\n");
+  }
+  
+  if (cmd_user_data_type_1 != faultify_packet_check_cmd_type(recv_buffer)) {
+    printf("ERROR wrong command response\n");
+  }
+  
+  if  (recv_buffer[10]) {
+    printf("ERROR not a response\n");
+  }
+  
+  if (faultify_packet_check_length(recv_buffer)!= (len/2-6)) {
+    printf("resp len: %u\n",faultify_packet_check_length(recv_buffer));
+    printf("expected: %u\n",(len/2-6));
+    printf("ERROR wrong response length\n");
+    exit(1);
+  }
+
+  for (ii=0;ii<(len/2-6);ii++) {
+    decoded[ii] = recv_buffer[16+ii];
+  }
+
+  
+  return 0;
+
+  
+
+}
+
+
+
 int8_t faultify_comm_start_free_run(struct faultify_handle *ftx) {
   uint8_t send_buffer[16];
   bzero(send_buffer,16);

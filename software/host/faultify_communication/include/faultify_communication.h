@@ -54,6 +54,9 @@ int8_t faultify_comm_run(struct faultify_handle *ftx,uint32_t cycles,uint32_t * 
 
 int8_t faultify_comm_start_free_run(struct faultify_handle *ftx);
 int8_t faultify_comm_stop_free_run(struct faultify_handle *ftx,uint32_t * cycles,uint32_t * numErrors);
+int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr,uint32_t len,uint8_t *decoded);
+
+
 
 uint8_t faultify_packet_check_sequence(uint8_t *data);
 enum commands faultify_packet_check_cmd_type(uint8_t *data);

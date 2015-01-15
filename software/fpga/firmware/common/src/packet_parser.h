@@ -25,7 +25,6 @@
 #include "lwip/inet.h"
 #include "lwip/err.h"
 #include "lwip/tcp.h"
-
 #include <stdint.h>
 
 #include "faultify_simulation.h"
@@ -51,6 +50,7 @@ int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_start_free_run(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_stop_free_run(struct tcp_pcb *pcb,unsigned char * data,int len);
+int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len);
 
 
 

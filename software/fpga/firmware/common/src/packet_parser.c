@@ -74,6 +74,97 @@ unsigned int comm_packet_check_length(unsigned char *data) {
 
 }
 
+int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len) {
+  XLlFifo * ctrl_fifo;
+  XLlFifo * data_fifo;
+  ctrl_fifo = malloc(sizeof(XLlFifo));
+  if (ctrl_fifo==NULL) {
+    print("malloc error ctrl_fifo...");
+  }
+  data_fifo = malloc(sizeof(XLlFifo));
+  if (data_fifo==NULL) {
+    print("malloc error data_fifo...");
+  }
+  
+  XLlFifo_Initialize(ctrl_fifo, XPAR_AXI_FIFO_MM_S_CTRL_BASEADDR);
+  XLlFifo_Initialize(data_fifo, XPAR_AXI_FIFO_MM_S_DATA_BASEADDR);
+  /* config */
+  /* TODO make user configurable */
+  uint32_t config_data=0;
+  config_data = (55 << 16);
+  config_data |= 50;
+  XLlFifo_Write(ctrl_fifo, &config_data, 4);
+  XLlFifo_TxSetLen(ctrl_fifo, 4);
+  
+  
+  /* transmit LLR */
+  /* TODO make block length user configurable */
+#define BLK_LEN 200
+  int fr=0;
+  uint32_t temp1,temp2,temp3;
+  for (fr=0;fr<412;fr+=2) {
+    temp3 = 0;
+    temp1 = (data[16+fr] & 0xF);
+    temp2 = (data[16+fr+1] & 0xF);
+    temp3 = temp2 << 8;
+    temp3 |= temp1;
+    XLlFifo_Write(data_fifo, &temp3, 4);
+  }
+  XLlFifo_TxSetLen(data_fifo, 412*4/2);
+  
+  /* read back result */
+  uint32_t buffer[BLK_LEN];
+  while (XLlFifo_RxOccupancy(data_fifo) == 0) {
+  
+  }
+  int idx =0;
+  while (XLlFifo_RxOccupancy(data_fifo)) {
+    //xil_printf("%x\n",XLlFifo_RxOccupancy(data_fifo));
+    int frame_len = XLlFifo_RxGetLen(data_fifo);
+    while (frame_len) {
+      XLlFifo_Read(data_fifo, &buffer[idx++], 4);
+      //xil_printf("%x\n",buffer[idx-1]);
+      frame_len -= 4;
+    }
+  }
+  free(data_fifo);
+  free(ctrl_fifo);
+
+  //send response
+  int send_len = 16+BLK_LEN;
+  uint8_t * send_buffer;
+  send_buffer = (uint8_t *)malloc(sizeof(uint8_t)*send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
+  // magic number
+  comm_packet_set_magic_number(send_buffer);
+  // type
+  comm_packet_set_packet_type(send_buffer,cmd_user_data_type_1);
+  // req/answ
+  send_buffer[10] = 0x00;
+  // last
+  send_buffer[11] = 0x01;
+  // length
+  comm_packet_set_packet_length(send_buffer,BLK_LEN);
+
+  // payload
+  uint32_t i;
+  for (i=0;i<BLK_LEN;i++) {
+    send_buffer[16+i] = (uint8_t)buffer[i];
+  }  
+
+  if (tcp_sndbuf(pcb) > send_len) {
+    tcp_write(pcb, send_buffer, send_len, 1);
+  } else
+    xil_printf("no space in tcp_sndbuf\n\r");
+  
+  free(send_buffer);
+  return 0;
+
+
+}
 
 int comm_start_free_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
  
@@ -141,7 +232,7 @@ int comm_stop_free_run(struct tcp_pcb *pcb,unsigned char * data,int len) {
   for (i=0;i<numOut*sizeof(uint32_t);i+=sizeof(uint32_t)) {
     memcpy(&send_buffer[16+i],&result[ii++],sizeof(uint32_t));
   }  
-  xil_printf("%x\n",cycles);
+  //xil_printf("%x\n",cycles);
   memcpy(&send_buffer[16+i],&cycles,sizeof(uint32_t));
   //for (i=0;i<send_len;i++)
   //xil_printf("%x\n",send_buffer[i]);
@@ -390,12 +481,13 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
     comm_run(pcb,buffer,total_payload_size+16);
   }
   if (rec_cmd == cmd_start_free_run) {
-    //xil_printf("run emulator\n");
     comm_start_free_run(pcb,buffer,total_payload_size+16);
   }
-if (rec_cmd == cmd_stop_free_run) {
-    //xil_printf("run emulator\n");
+  if (rec_cmd == cmd_stop_free_run) {
     comm_stop_free_run(pcb,buffer,total_payload_size+16);
+  }
+  if (rec_cmd == cmd_user_data_type_1) {
+    comm_viterbi_decode(pcb,buffer,total_payload_size+16);
   }
 
   free(buffer);
