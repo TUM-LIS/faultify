@@ -87,6 +87,25 @@ int fp_uniform_fault_injection(double *in,unsigned int len, double p_e) {
   
 }
 
+int fp_fault_injection_single(float *in,unsigned int len, double *p_e) {
+  
+  unsigned int i,b;
+  double r;
+  for (i=0;i<len;i++) {
+    for (b=0;b<32;b++) {
+      // fault injection
+      r = ((double)rand())/RAND_MAX;
+      if (r>p_e[b]) {
+        // nothing
+      } else {
+        // toggle
+        *(unsigned int *)&in[i] ^= ((unsigned int)1 << b);
+      }
+    }  
+  }
+  return 1;
+  
+}
 
 int fp_fault_injection(double *in,unsigned int len, double *p_e) {
   

@@ -8,13 +8,9 @@
 #include "sobel.h"
 #include "bitmanipulation.h"
 
-/********************* MAIN FUNCTION**********************************/
-
 int main(int argc, char * argv[])
 {
   time_t start_time , end_time ;
-  /*********************************** Variable Declaration ******************************/
-  
   int Frame_num = 0  ; // loop variable
   
   //File pointer for reading and writting
@@ -31,59 +27,47 @@ int main(int argc, char * argv[])
   
   double pe1[64],pe2[64],pe3[64];
   
-  
+  int i;
+  for (i=0;i<64;i++) {
+    fscanf(fh1,"%lf",&pe1[i]);
+    fscanf(fh2,"%lf",&pe2[i]);
+    fscanf(fh3,"%lf",&pe3[i]);
+  }
 
-
-
-  /*******************************************************************************************/
-  
-  
-  /*********************************** Opena and close file operation  ******************************/
-  
   //Read Input imgae file in binary mode
   if ( ! ( File_reader = fopen(Input_Filename,"rb") ) )
     {
-      printf ( "\nError in opening input file" );
+      printf ( "Error opening input file\n" );
       exit( 0 );
     }
   
   //Open Output imgae file in binary mode
   if ( ! ( File_writer = fopen(Output_Filename,"wb") ) )
     {
-      printf ( "\nError in opening output file" );
+      printf ( "Error opening output file\n" );
       exit( 0 );
     }
   
-  /*******************************************************************************************/
-  
-  /*********************************** Assign memory to pointers operations  ******************************/
-  Sobel_Init   ( &Input_Image_ptr,  &Output_Image_ptr  ) ;
-  
-  
-  
+  Sobel_Init( &Input_Image_ptr,  &Output_Image_ptr  ) ;
+   
   //start timer
   time(&start_time) ;
-  
-  
-  /*******************************************************************************************/
-  
-  
-  /*********************************** ITERATING OVER EACH FRAM ONE BY ONE  ******************************/
+   
+  /* ITERATING OVER EACH FRAM ONE BY ONE */
   for (Frame_num = 0 ; Frame_num < NUM_FRAME; Frame_num++ ) 
     {
       //Load Frame
       Load_Frame   ( Input_Image_ptr, File_reader , Frame_num )  ;
-      //  memcpy ( Output_Image_ptr , Input_Image_ptr ,(size_t)(1.5f * WIDTH * HEIGHT) * sizeof ( unsigned char ) ) ;
-      
+       
       //Apply Sobel filter
       //Apply on Y plane
-      Sobel_Operation ( Input_Image_ptr, Output_Image_ptr , WIDTH , HEIGHT , THRESH_HOLD_Y  ) ;
+      Sobel_Operation ( Input_Image_ptr, Output_Image_ptr , WIDTH , HEIGHT , THRESH_HOLD_Y ,&pe1[0],&pe2[0],&pe3[0] ) ;
       
       //Apply for U plane
-      Sobel_Operation ( Input_Image_ptr +  HEIGHT*WIDTH , Output_Image_ptr +  HEIGHT*WIDTH , WIDTH/2 , HEIGHT/2, THRESH_HOLD_U  ) ;
+      Sobel_Operation ( Input_Image_ptr +  HEIGHT*WIDTH , Output_Image_ptr +  HEIGHT*WIDTH , WIDTH/2 , HEIGHT/2, THRESH_HOLD_U ,&pe1[0],&pe2[0],&pe3[0]  ) ;
       
       //Apply for V plane
-      Sobel_Operation ( Input_Image_ptr +  (size_t)(1.25*HEIGHT*WIDTH) , Output_Image_ptr + (size_t)(1.25*HEIGHT*WIDTH)  , WIDTH/2 , HEIGHT/2 ,THRESH_HOLD_V  ) ;
+      Sobel_Operation ( Input_Image_ptr +  (size_t)(1.25*HEIGHT*WIDTH) , Output_Image_ptr + (size_t)(1.25*HEIGHT*WIDTH)  , WIDTH/2 , HEIGHT/2 ,THRESH_HOLD_V ,&pe1[0],&pe2[0],&pe3[0]  ) ;
       
       //Save frame in video
       Save_Frame_In_Video ( Output_Image_ptr , File_writer )  ;
@@ -142,7 +126,7 @@ void Load_Frame ( unsigned char *Input_Image_ptr, FILE *File_reader , const int 
       printf ("\nRead operation can not be done; Error occured\n" );
       
       printf("reached end of video file at frame number %d\n", Frame_num);
-      printf("read size is %d\n", read_size);
+      printf("read size is %d\n", (int)read_size);
       
       exit( 0 );
     }
@@ -151,9 +135,9 @@ void Load_Frame ( unsigned char *Input_Image_ptr, FILE *File_reader , const int 
 
 
 //Sobel operation; Applying Sobel operator
-void Sobel_Operation ( unsigned char *Input, unsigned char *Output , const int Width , const int Height , const size_t Thresh )
+void Sobel_Operation ( unsigned char *Input, unsigned char *Output , const int Width , const int Height , const size_t Thresh, double *pe1,double *pe2,double *pe3 )
 {
-  
+  float tmp_h,tmp_v;
   //row_num for Number of Row and col_num for Number of Colomn
   int row_num, col_num;
   
@@ -175,7 +159,9 @@ void Sobel_Operation ( unsigned char *Input, unsigned char *Output , const int W
 			     2*Input [row_num*Width + (col_num-1)] +
 			     2*Input [ row_num*Width + (col_num+1) ] -
 			     Input[ (row_num+1)*Width + (col_num-1)] +
-			     Input [ (row_num+1)*Width + (col_num+1)] ) /8 ;
+			     Input [ (row_num+1)*Width + (col_num+1)] ) ;
+
+	      Gradient_v = Gradient_v/8;
               
 	      Gradient_h = -(-Input [(row_num-1)*Width + (col_num-1)] -
 			     2*Input [ (row_num-1)*Width + col_num ] -
@@ -186,40 +172,31 @@ void Sobel_Operation ( unsigned char *Input, unsigned char *Output , const int W
 
 	      
 	      Gradient_h = Gradient_h/8;
-              
 
-	      // inject faults div
-	      double pe[64];
-	      int i;
-	      for (i=0;i<64;i++) {
-		pe[i] = 0.0f;
-	      }
-	      //      for (i=52;i<55;i++) {
-	      //pe[i] = 0.5f;
-	      //}
-	      double tmp;
-	      tmp = (double)Gradient_h;
-	      //fp_fault_injection(&tmp,1,pe);
-	      Gradient_h = tmp;
+	      // inject faults fdiv
+	      tmp_h = Gradient_h;
+	      tmp_v = Gradient_v;
+	      fp_fault_injection_single(&tmp_h,1,pe1);
+	      Gradient_h = tmp_h;
+	      fp_fault_injection_single(&tmp_v,1,pe1);
+	      Gradient_v = tmp_v;
 
-	      //Assign to image
-
-	      double Gradient_h_sqd;
+	      // inject faults fmul
+	      float Gradient_h_sqd,Gradient_v_sqd;
 	      Gradient_h_sqd = Gradient_h * Gradient_h;
-
-	      for (i=0;i<64;i++) {
-		pe[i] = 0.0f;
-	      }
-	      for (i=52;i<52;i++) {
-		pe[i] = 0.5f;
-	      }
-	      tmp = (double)Gradient_h_sqd;
-	      fp_fault_injection(&tmp,1,pe);
-	      Gradient_h_sqd = tmp;
+	      Gradient_v_sqd = Gradient_v * Gradient_v;
+	      tmp_h = Gradient_h_sqd;
+	      fp_fault_injection_single(&tmp_h,1,pe2);
+	      Gradient_h_sqd = tmp_h;
+	      tmp_v = Gradient_v_sqd;
+	      fp_fault_injection_single(&tmp_v,1,pe2);
+	      Gradient_v_sqd = tmp_v;
+	      // inject faults fsqrt
+	      //Pixel_Value = ( char ) sqrtf ( Gradient_h_sqd + Gradient_v_sqd ) ;
 	      
-
-	      Pixel_Value = ( char ) sqrtf ( Gradient_h_sqd + Gradient_v * Gradient_v ) ;
-
+          tmp_h = sqrtf ( Gradient_h_sqd + Gradient_v_sqd );
+	      fp_fault_injection_single(&tmp_h,1,pe3);
+	      Pixel_Value = (char)tmp_h;
 
 
 

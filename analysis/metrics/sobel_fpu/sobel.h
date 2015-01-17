@@ -15,11 +15,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 
 //define image height and width with number of frames
 #define HEIGHT      576 
 #define WIDTH       704
-#define NUM_FRAME   100
+#define NUM_FRAME   10
 #define THRESH_HOLD_Y      20 
 #define THRESH_HOLD_U      20 
 #define THRESH_HOLD_V      20
@@ -40,7 +41,7 @@ void Load_Frame  ( unsigned char *Input_Image_ptr, FILE *File_reader, const int 
 //Saving each frame to output file
 void Save_Frame_In_Video ( unsigned char *Output_Image_ptr , FILE * File_writer ) ;
 //Sobel operation; Applying Sobel operator
-void Sobel_Operation ( unsigned char *Input, unsigned char *Output , const int Width , const int Height, const size_t Thresh  ) ;     
+void Sobel_Operation ( unsigned char *Input, unsigned char *Output , const int Width , const int Height, const size_t Thresh , double *pe1,double *pe2,double *pe3  ) ;     
 //Sobel thrash-hold
 char Sobel_Thrashhold ( char Pixel_Value , const size_t Thresh ) ;
 

@@ -44,7 +44,7 @@ result = csvread('result.csv');
 
 %Define the maximal mistake for the output
 % le
-max_pe = [0 0 0 0 1E-5 1E-4 1E-3 1E-2 1E-1 0];
+max_pe = [0 0 0 0 1E-5 1E-4 1E-3 1E-2 1E-1 1E-1];
 % be
 %max_pe = [0 1E-1 1E-2 1E-3 1E-4 1E-5 1E-6 1E-7 1E-8 0];
 max_vec= zeros(1,89);
