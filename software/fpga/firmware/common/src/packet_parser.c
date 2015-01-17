@@ -74,6 +74,59 @@ unsigned int comm_packet_check_length(unsigned char *data) {
 
 }
 
+
+int comm_speed_test(struct tcp_pcb *pcb,unsigned char * data,int len) {
+  int numData;
+  numData = comm_packet_check_length(data);
+  uint8_t * dbuf;
+  dbuf = malloc(numData);
+  if (dbuf == NULL) {
+    xil_printf("malloc error - pe @ %s\n",__FUNCTION__);
+    return 1;
+  }
+  memcpy(dbuf,&data[16],numData);
+
+  //send response
+  int send_len = 16+numData;
+  uint8_t * send_buffer;
+  send_buffer = (uint8_t *)malloc(send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
+  // magic number
+  comm_packet_set_magic_number(send_buffer);
+  // type
+  comm_packet_set_packet_type(send_buffer,cmd_speed_test);
+  // req/answ
+  send_buffer[10] = 0x00;
+  // last
+  send_buffer[11] = 0x01;
+  // length
+  comm_packet_set_packet_length(send_buffer,numData);
+  
+  // payload
+  memcpy(&send_buffer[16],&dbuf[0],numData);
+#define PKG_SZ 1024
+ int pkg=0,idx=0;
+  for (pkg=0;pkg<((16+numData)/PKG_SZ);pkg++) {
+    if (tcp_sndbuf(pcb) > PKG_SZ) {
+      tcp_write(pcb, &send_buffer[pkg*PKG_SZ], PKG_SZ, 1);
+      idx += PKG_SZ;
+    } else
+      xil_printf("no space in tcp_sndbuf\n\r");
+  }
+  if (tcp_sndbuf(pcb) >(16+numData)-(pkg*PKG_SZ) ) {
+    tcp_write(pcb, &send_buffer[idx],(16+numData)-(pkg*PKG_SZ) , 1);
+    idx += PKG_SZ;
+  } else
+    xil_printf("no space in tcp_sndbuf\n\r");
+  
+  free(dbuf);
+  free(send_buffer);
+  return 0;
+}
+
 int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len) {
   XLlFifo * ctrl_fifo;
   XLlFifo * data_fifo;
@@ -102,7 +155,7 @@ int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len) {
 #define BLK_LEN 200
   int fr=0;
   uint32_t temp1,temp2,temp3;
-  for (fr=0;fr<412;fr+=2) {
+  for (fr=0;fr<((BLK_LEN+6)*2);fr+=2) {
     temp3 = 0;
     temp1 = (data[16+fr] & 0xF);
     temp2 = (data[16+fr+1] & 0xF);
@@ -110,7 +163,7 @@ int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len) {
     temp3 |= temp1;
     XLlFifo_Write(data_fifo, &temp3, 4);
   }
-  XLlFifo_TxSetLen(data_fifo, 412*4/2);
+  XLlFifo_TxSetLen(data_fifo,((BLK_LEN+6)*2)*4/2);
   
   /* read back result */
   uint32_t buffer[BLK_LEN];
@@ -418,17 +471,18 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
   static uint32_t total_payload_size;
 
   int i;
-  //printf("DBG: len: %d\n",len);
+  printf("DBG: len: %d\n",len);
  
   if (!filling_up) {
     
     /* check for magic sequence */
-    if (comm_packet_check_sequence(data)) {
+    if (comm_packet_check_sequence(data)) {   
+      xil_printf("wrong sequence\n");
       return 1;
     }
     /* command type */
     rec_cmd = comm_packet_check_cmd_type(data);
-    //xil_printf("DBG: cmd: %d\n",rec_cmd);
+    xil_printf("DBG: cmd: %d\n",rec_cmd);
     
     /* total payload size */
     total_payload_size = comm_packet_check_length(data);
@@ -489,7 +543,10 @@ int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len){
   if (rec_cmd == cmd_user_data_type_1) {
     comm_viterbi_decode(pcb,buffer,total_payload_size+16);
   }
-
+  if (rec_cmd == cmd_speed_test) {
+    comm_speed_test(pcb,buffer,total_payload_size+16);
+    xil_printf("speed test\n"); 
+  }
   free(buffer);
   return 0;
   

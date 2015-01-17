@@ -19,6 +19,11 @@ static int32_t llr[412] = {-6,-5,-3,5,-3,-6,4,3,-5,3,-6,7,-2,-8,0,5,-7,-2,-4,-4,
 		-5,3,1,-6,7,-3,3,3,-6,-5,-1,-5,7,3,-5,-2,0,0,-6,3,0,-6,7,-5,3,-7,1};
 
 
+#include <sys/time.h>
+
+struct timeval tval_before, tval_after, tval_result;
+
+
 
 int main(void) {
   
@@ -55,8 +60,8 @@ int main(void) {
   double pe[ftx->numInj];
   int i;
   for (i=0;i<ftx->numInj;i++)
-    pe[i] = 0.0f;
-  
+    pe[i] = 0.0000f;
+
   r = faultify_comm_configure(ftx,ftx->numInj,&pe[0]);
   if (r) {
     fprintf(stderr,"failed to configure the emulator\n");
@@ -77,7 +82,15 @@ int main(void) {
   } else {
     fprintf(stderr,"started free run\n");
   }
-  
+
+  /* start time meas */
+gettimeofday(&tval_before, NULL);
+
+int32_t randii[4012];
+  for (i=0;i<4012;i++) {
+	randii[i] = rand();
+
+}
   /* Main loop */
 #define NUM_BLK  1
   int blk;
@@ -86,18 +99,18 @@ int main(void) {
     /* load LLR */
     /* read decoded data */
     faultify_comm_viterbi_decode(ftx,&llr[0],412,&decoded[0]);
-    for (i=0;i<200;i++) {
+    //faultify_comm_viterbi_decode(ftx,&randii[0],4012,&decoded[0]);
+    /*for (i=0;i<200;i++) {
       printf("%u\n",decoded[i]);
     }
-    printf("\n");
+    printf("\n");*/
     /* read back temporary sim result */
-
-
-
-    
   }
-  
+  /* stop time meas */
+  gettimeofday(&tval_after, NULL);
+  timersub(&tval_after, &tval_before, &tval_result);
 
+  
   /* Stop the free run */
   r = faultify_comm_stop_free_run(ftx,&(ftx->numCycles),result);
   printf("%u\n",ftx->numCycles);
@@ -108,6 +121,8 @@ int main(void) {
 
   r = faultify_comm_disconnect(ftx);
 
-
+  printf("Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+  printf("average decoded kbits/s: %f\n",(double)(NUM_BLK*200)/tval_result.tv_sec/1024);
+ 
   return 0;
 }

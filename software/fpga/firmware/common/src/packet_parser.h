@@ -42,7 +42,8 @@ enum commands {cmd_identify=1,
                cmd_run=3,
                cmd_start_free_run=4,
                cmd_stop_free_run=5,
-               cmd_user_data_type_1=6};
+               cmd_user_data_type_1=6,
+	       cmd_speed_test=7};
 
 int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_identify(struct tcp_pcb *pcb,unsigned char * data,int len);
@@ -51,6 +52,7 @@ int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_start_free_run(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_stop_free_run(struct tcp_pcb *pcb,unsigned char * data,int len);
 int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len);
+int comm_speed_test(struct tcp_pcb *pcb,unsigned char * data,int len);
 
 
 

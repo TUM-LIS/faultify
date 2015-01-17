@@ -79,6 +79,8 @@ int main(void) {
   }
 
 
+  r = faultify_comm_speed_test(ftx,2000);
+
   r = faultify_comm_disconnect(ftx);
 
 
