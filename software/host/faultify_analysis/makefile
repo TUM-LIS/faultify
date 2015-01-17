@@ -3,18 +3,24 @@ RM := rm -rf
 INC_DIR += include \
 	-I ../faultify_communication/include/
 
-OBJS += faultify_dpcp_standalone.o \
-	src/faultify_simulation_campaigns.o \
+MAIN_DPCP = faultify_dpcp_standalone.o
+MAIN_INJECT = faultify_inject_faults.o 
+
+OBJS_COMMON +=	src/faultify_simulation_campaigns.o \
         ../faultify_communication/src/faultify_communication.o
 
 GLIB_INC = `pkg-config --cflags --libs glib-2.0`
 GLIB_LIB = `pkg-config --libs glib-2.0`
 
-all: faultify_dpcp_standalone
+all: faultify_dpcp_standalone faultify_inject_faults
 
-faultify_dpcp_standalone: $(OBJS)
+faultify_dpcp_standalone: $(MAIN_DPCP) $(OBJS_COMMON)
 	@echo 'Building target: $@'
-	gcc -Wall $(GLIB_INC) -o faultify_dpcp_standalone $(OBJS) $(GLIB_LIB)
+	gcc -Wall $(GLIB_INC) -o faultify_dpcp_standalone $(MAIN_DPCP) $(OBJS_COMMON) $(GLIB_LIB)
+
+faultify_inject_faults : $(MAIN_INJECT) $(OBJS_COMMON)
+	@echo 'Building target: $@'
+	gcc -Wall $(GLIB_INC) -o faultify_inject_faults $(MAIN_INJECT) $(OBJS_COMMON) $(GLIB_LIB)
 
 src/%.o: src/%.c
 	@echo 'Building file: $<'
@@ -26,5 +32,5 @@ src/%.o: src/%.c
 
 clean:
 
-	-$(RM) $(OBJS) faultify_dpcp_standalone
+	-$(RM) $(OBJS_COMMON) $(MAIN_DPCP) $(MAIN_INJECT) faultify_dpcp_standalone faultify_inject_faults
 

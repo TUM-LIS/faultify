@@ -11,7 +11,7 @@ sp605/src/platform_zynq.c
 LD_SRCS += \
 sp605/src/lscript.ld 
 
-OBJS += \
+OBJS_SP605 += \
 common/src/echo.o \
 common/src/main.o \
 common/src/packet_parser.o \

@@ -14,6 +14,7 @@
 
 #include "platform_config.h"
 #include "faultify_axi_wrapper.h"
+#include "xllfifo.h"
 
 
 #define REG_CONTROL        0x00000000
@@ -57,3 +58,10 @@ void faultify_run_free(uint32_t numInj,
 		       uint32_t * cycles,
 		       uint32_t * result);
 
+void faultify_start_free_campaign(uint32_t numInj,
+			     uint32_t numOut,
+			     double * probs);
+
+void faultify_stop_free_campaign(uint32_t numOut,
+				 uint32_t * cycles,
+				 uint32_t * result);

@@ -5,13 +5,35 @@
 #include "faultify_communication.h"
 #include "faultify_simulation_campaigns.h"
 
-#define b14 1
+#define b14 0
+#define fpu100 0
+#define qr 0
+#define viterbi 1
 
 #if b14
 #define numInj 216
 #define numIn 32
 #define numOut 54
 #endif
+
+#if fpu100
+#define numInj 140
+#define numIn 70
+#define numOut 41
+#endif
+
+#if qr
+#define numInj 414
+#define numIn 111
+#define numOut 202
+#endif
+
+#if viterbi
+#define numInj 282
+#define numIn 69
+#define numOut 5
+#endif
+
 
 struct faultify_handle *ftx;
 
@@ -58,10 +80,27 @@ int main (void) {
     fsc.max_output_error_probability[out] = 0.0f;
   }
   //for (out=56;out<88;out++) /*h264*/
+
+#if b14
   for(out=20;out<52;out++) /*b14*/
     fsc.max_output_error_probability[out] = 0.5f;
-  
-  fsc.simCycles = 1000000;
+#endif
+#if fpu100 
+ for(out=9;out<31;out++) /*fpu100*/
+
+for(out=34;out<40;out++) /*fpu100*/
+    fsc.max_output_error_probability[out] = 0.5f;
+#endif
+#if qr
+  for(out=2;out<194;out++) /*QR*/
+    fsc.max_output_error_probability[out] = 0.5f;
+#endif
+
+#if viterbi
+    fsc.max_output_error_probability[2] = 0.5f;
+#endif
+
+ fsc.simCycles = 10000000;
 
   faultify_simulation_create_probability_relation_matrix(fsc.simCycles);
 
