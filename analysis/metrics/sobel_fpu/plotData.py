@@ -22,11 +22,15 @@ t = np.arange(0, 32, 1)
 
 plt.figure()
 plt.subplot(311)
-plt.plot(t,div_30[0],'ro-',t,div_40[0],'go-',t,div_50[0],'bo-')
+plt.plot(t,div_30[0],'ro-',label='30 dB')
+plt.plot(t,div_40[0],'go-',label='40 dB')
+plt.plot(t,div_50[0],'bo-',label='50 dB')
 plt.xlabel('Bit index')
 plt.ylabel(r'Tolerated $p_e$')
 plt.text(2,.3,'fdiv', fontsize=20,style='italic', fontweight='bold')
 plt.annotate('sign bit',xy=(30,0.1),xytext=(25,.3),arrowprops=dict(arrowstyle="->"))
+plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=3, mode="expand", borderaxespad=0.)
 
 plt.subplot(312)
 plt.plot(t,mul_30[0],'ro-',t,mul_40[0],'go-',t,mul_50[0],'bo-')

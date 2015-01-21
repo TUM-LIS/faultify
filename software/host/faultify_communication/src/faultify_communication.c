@@ -213,29 +213,40 @@ int8_t faultify_comm_speed_test(struct faultify_handle *ftx,uint32_t numData) {
   // random payload
   int ii;
   for (ii=0;ii<numData;ii++) {
-    send_buffer[16+ii] = ii;
+    send_buffer[16+ii] =ii;
   }
   // split packets HACK
+#define PKG_LEN 1024
   int r;
   int pkg=0,idx=0;
-  for (pkg=0;pkg<((16+numData)/1024);pkg++) {
-    r = write(ftx->sockfd,&send_buffer[pkg*1024],1024);
+	printf("sending %i packets\n",(16+numData)/PKG_LEN);
+  for (pkg=0;pkg<((16+numData)/PKG_LEN);pkg++) {
+    	r = write(ftx->sockfd,&send_buffer[pkg*PKG_LEN],PKG_LEN);
+	printf("sent: %u\n",r);
+        usleep(50000);
     if (r<0) {
       return 1;
     } else {
-      idx +=1024;
+      idx +=PKG_LEN;
     }
-    usleep(100000);
+
   }
   //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
-  r = write(ftx->sockfd,&send_buffer[idx],(16+numData)-(pkg*1024));
+  r = write(ftx->sockfd,&send_buffer[idx],(16+numData)-(pkg*PKG_LEN));
   if (r<0) {
     return 1;
   }
 
 
+  ssize_t bytes_read=0;
+	idx = 0;
+  while (bytes_read<(16+numData)) {
+	bytes_read += read(ftx->sockfd,&recv_buffer[idx],16+numData);
+	idx += bytes_read;
+	usleep(40000);
+  }
 
-  r = read(ftx->sockfd,recv_buffer,16+numData);
+  
   if (r < 0) 
     printf("ERROR reading from socket");
   
@@ -260,7 +271,8 @@ int8_t faultify_comm_speed_test(struct faultify_handle *ftx,uint32_t numData) {
   }
 
   for (ii=0;ii<numData;ii++) {
-    printf("%u\n",recv_buffer[16+ii]);
+	if (send_buffer[16+ii] != recv_buffer[16+ii])
+	  	printf("e@%u %u!=%u\n",ii,send_buffer[16+ii],recv_buffer[16+ii]);	
   }
 
   return 0;
@@ -273,7 +285,7 @@ int8_t faultify_comm_speed_test(struct faultify_handle *ftx,uint32_t numData) {
 int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, uint32_t len, uint8_t *decoded) {
  uint8_t send_buffer[16+len];
   bzero(send_buffer,16);
-  uint8_t recv_buffer[16+(len/2-6)];
+  uint8_t recv_buffer[16+(len/4-6)];
   bzero(recv_buffer,16);
   //  magic number
   faultify_packet_set_magic_number(send_buffer);

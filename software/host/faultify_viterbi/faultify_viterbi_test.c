@@ -53,7 +53,8 @@ int main(void) {
 	    ftx->version_fpga_hardware[1]);
   }
 
-  
+  // r = faultify_comm_stop_free_run(ftx,NULL,NULL);
+
   ftx->numInj = 282;
   ftx->numOut=5;
   ftx->numCycles = 0;
@@ -86,24 +87,44 @@ int main(void) {
   /* start time meas */
 gettimeofday(&tval_before, NULL);
 
-int32_t randii[4012];
-  for (i=0;i<4012;i++) {
-	randii[i] = rand();
-
+/*
+int32_t llr_dab[3096];
+FILE *fh;
+fh = fopen("dab_test_in.txt","r");
+for (i=0;i<3096;i++) {
+	fscanf(fh,"%1d",&llr_dab[i]);
 }
+for (i=0;i<3096;i++) {
+	if (llr_dab[i]==0) {
+llr_dab[i] = -6;
+}
+	if (llr_dab[i]==1) {
+llr_dab[i] = 7;
+}
+if (llr_dab[i]==8) {
+llr_dab[i] = 0;
+}
+}
+for (i=0;i<10;i++) {
+	fprintf(stderr,"%i\n",llr_dab[i]);
+}
+*/
   /* Main loop */
 #define NUM_BLK  1
   int blk;
+  //uint8_t decoded[768];
   uint8_t decoded[200];
   for (blk = 0;blk<NUM_BLK;blk++) {
     /* load LLR */
     /* read decoded data */
     faultify_comm_viterbi_decode(ftx,&llr[0],412,&decoded[0]);
-    //faultify_comm_viterbi_decode(ftx,&randii[0],4012,&decoded[0]);
-    /*for (i=0;i<200;i++) {
+    //faultify_comm_viterbi_decode(ftx,&llr_dab[0],1560,&decoded[0]);
+    //faultify_comm_viterbi_decode(ftx,&llr_dab[1560],1560,&decoded[384]);
+
+    for (i=0;i<200;i++) {
       printf("%u\n",decoded[i]);
     }
-    printf("\n");*/
+    printf("\n");
     /* read back temporary sim result */
   }
   /* stop time meas */

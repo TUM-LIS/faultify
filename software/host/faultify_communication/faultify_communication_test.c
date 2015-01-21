@@ -2,6 +2,8 @@
 
 
 struct faultify_handle *ftx;
+struct timeval tval_before, tval_after, tval_result;
+#include <sys/time.h>
 
 int main(void) {
   
@@ -79,8 +81,16 @@ int main(void) {
   }
 
 
-  r = faultify_comm_speed_test(ftx,2000);
+  gettimeofday(&tval_before, NULL);
 
+for(i=0;i<10;i++) {
+  r = faultify_comm_speed_test(ftx,2048);
+}
+  gettimeofday(&tval_after, NULL);
+  timersub(&tval_after, &tval_before, &tval_result);
+  printf("Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
+  printf("average decoded kbits/s: %f\n",(double)(100*2048)/tval_result.tv_sec/1024);
+ 
   r = faultify_comm_disconnect(ftx);
 
 
