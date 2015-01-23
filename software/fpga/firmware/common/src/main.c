@@ -22,6 +22,8 @@ void lwip_init();
 static struct netif server_netif;
 struct netif *echo_netif;
 
+extern volatile int TcpFastTmrFlag;
+extern volatile int TcpSlowTmrFlag;
 
 void
 print_ip(char *msg, struct ip_addr *ip) 
@@ -91,11 +93,11 @@ int main()
 
 	/* receive and process packets */
 	while (1) {
-		xemacif_input(echo_netif);
-		transfer_data();
-
+	  xemacif_input(echo_netif);
+	  transfer_data();
+	  
 	}
-  
+	
 	/* never reached */
 	cleanup_platform();
 

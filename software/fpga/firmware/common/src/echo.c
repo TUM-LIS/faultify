@@ -56,6 +56,9 @@ err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
 	/* parse the packet */
 	packet_parser(tpcb,p->payload,p->len);
 
+	/* indicate that the packet has been received */
+	//tcp_recved(tpcb, p->len);
+
 	/* echo back the payload */
 	/* in this case, we assume that the payload is < TCP_SND_BUF */
 	/*
@@ -87,12 +90,15 @@ err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
 	return ERR_OK;
 }
 
+void error_callback(void *arg,err_t err){
+  xil_printf("error\n");
+}
 
 int start_application()
 {
 	struct tcp_pcb *pcb;
 	err_t err;
-	unsigned port = 7;
+	unsigned port = 49152;
 
 	/* create new TCP PCB structure */
 	pcb = tcp_new();
@@ -107,6 +113,8 @@ int start_application()
 		xil_printf("Unable to bind to port %d: err = %d\n\r", port, err);
 		return -2;
 	}
+
+	tcp_err(pcb,error_callback);
 
 	/* we do not need any arguments to callback functions */
 	tcp_arg(pcb, NULL);
