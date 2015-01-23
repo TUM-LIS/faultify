@@ -22,10 +22,13 @@
 #include "xil_printf.h"
 #endif
 
-#include "lwip/inet.h"
-#include "lwip/err.h"
-#include "lwip/tcp.h"
+
 #include <stdint.h>
+
+#include "lwip/inet.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include "lwipopts.h"
 
 #include "faultify_simulation.h"
 
@@ -45,14 +48,14 @@ enum commands {cmd_identify=1,
                cmd_user_data_type_1=6,
 	       cmd_speed_test=7};
 
-int packet_parser(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_identify(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_configure(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_run(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_start_free_run(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_stop_free_run(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_viterbi_decode(struct tcp_pcb *pcb,unsigned char * data,int len);
-int comm_speed_test(struct tcp_pcb *pcb,unsigned char * data,int len);
+int packet_parser(int sd,unsigned char * data,int len);
+int comm_identify(int sd,unsigned char * data,int len);
+int comm_configure(int sd,unsigned char * data,int len);
+int comm_run(int sd,unsigned char * data,int len);
+int comm_start_free_run(int sd,unsigned char * data,int len);
+int comm_stop_free_run(int sd,unsigned char * data,int len);
+int comm_viterbi_decode(int sd,unsigned char * data,int len);
+int comm_speed_test(int sd,unsigned char * data,int len);
 
 
 

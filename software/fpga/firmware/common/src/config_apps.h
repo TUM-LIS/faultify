@@ -16,10 +16,16 @@
  *
  */
 
-#ifndef __PLATFORM_H_
-#define __PLATFORM_H_
+#ifndef __CONFIG_APPS_H_
+#define __CONFIG_APPS_H_
 
-int init_platform();
-void cleanup_platform();
+#define THREAD_STACKSIZE 16384
 
+#define INCLUDE_ECHO_SERVER    1
+#define INCLUDE_WEB_SERVER     0
+#define INCLUDE_TFTP_SERVER    0
+#define INCLUDE_RXPERF_SERVER  0
+#define INCLUDE_TXPERF_CLIENT  0
+#define INCLUDE_UTXPERF_CLIENT 0
+#define INCLUDE_URXPERF_SERVER 0
 #endif

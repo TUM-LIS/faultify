@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Xilinx, Inc.  All rights reserved.
+ * Copyright (c) 2007-2009 Xilinx, Inc.  All rights reserved.
  *
  * Xilinx, Inc.
  * XILINX IS PROVIDING THIS DESIGN, CODE, OR INFORMATION "AS IS" AS A
@@ -19,117 +19,108 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "lwip/err.h"
-#include "lwip/tcp.h"
+#include "lwip/inet.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include "lwipopts.h"
+
+#include "config_apps.h"
 #ifdef __arm__
 #include "xil_printf.h"
+#include "FreeRTOS.h"
+#include "task.h"
 #endif
 
 #include "packet_parser.h"
 
+u16_t echo_port = 49152;
 
+void print_echo_app_header()
+{
+    xil_printf("%20s %6d %s\r\n", "echo server",
+                        echo_port,
+                        "$ telnet <board_ip> 7");
 
-
-int transfer_data() {
-	return 0;
 }
 
-void print_app_header()
+/* thread spawned for each connection */
+void process_echo_request(void *p)
 {
-	xil_printf("\n\r\n\r-----lwIP TCP echo server ------\n\r");
-	xil_printf("TCP packets sent to port 6001 will be echoed back\n\r");
-}
+	int sd = (int)p;
+	int RECV_BUF_SIZE = 2048;
+	char recv_buf[RECV_BUF_SIZE];
+	int n, nwrote;
 
-err_t recv_callback(void *arg, struct tcp_pcb *tpcb,
-                               struct pbuf *p, err_t err)
-{
-	/* do not read the packet if we are not in ESTABLISHED state */
-	if (!p) {
-		tcp_close(tpcb);
-		tcp_recv(tpcb, NULL);
-		return ERR_OK;
+	while (1) {
+		/* read a max of RECV_BUF_SIZE bytes from socket */
+		if ((n = read(sd, recv_buf, RECV_BUF_SIZE)) < 0) {
+			xil_printf("%s: error reading from socket %d, closing socket\r\n", __FUNCTION__, sd);
+#ifndef OS_IS_FREERTOS			
+			close(sd);
+			return;
+#else
+			break;
+#endif
+		}
+
+		/* break if the recved message = "quit" */
+		if (!strncmp(recv_buf, "quit", 4))
+			break;
+
+		/* break if client closed connection */
+		if (n <= 0)
+			break;
+
+		/* handle request */
+		packet_parser(sd,(uint8_t*)recv_buf,(uint32_t)n);
+		/*
+		if ((nwrote = write(sd, recv_buf, n)) < 0) {
+			xil_printf("%s: ERROR responding to client echo request. received = %d, written = %d\r\n",
+					__FUNCTION__, n, nwrote);
+			xil_printf("Closing socket %d\r\n", sd);
+#ifndef OS_IS_FREERTOS
+			close(sd);
+			return;
+#else
+			break;
+#endif
+		}
+		*/
 	}
 
-	/* indicate that the packet has been received */
-	tcp_recved(tpcb, p->len);
-
-	/* parse the packet */
-	packet_parser(tpcb,p->payload,p->len);
-
-	/* indicate that the packet has been received */
-	//tcp_recved(tpcb, p->len);
-
-	/* echo back the payload */
-	/* in this case, we assume that the payload is < TCP_SND_BUF */
-	/*
-	if (tcp_sndbuf(tpcb) > p->len) {
-		err = tcp_write(tpcb, p->payload, p->len, 1);
-	} else
-		xil_printf("no space in tcp_sndbuf\n\r");
-	*/
-	/* free the received pbuf */
-	pbuf_free(p);
-
-	return ERR_OK;
+	/* close connection */
+	close(sd);
+#ifdef OS_IS_FREERTOS
+	vTaskDelete(NULL);
+#endif
 }
 
-err_t accept_callback(void *arg, struct tcp_pcb *newpcb, err_t err)
+void echo_application_thread()
 {
-	static int connection = 1;
+	int sock, new_sd;
+	struct sockaddr_in address, remote;
+	int size;
 
-	/* set the receive callback for this connection */
-	tcp_recv(newpcb, recv_callback);
+	if ((sock = lwip_socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		return;
 
-	/* just use an integer number indicating the connection id as the
-	   callback argument */
-	tcp_arg(newpcb, (void*)connection);
+	address.sin_family = AF_INET;
+	address.sin_port = htons(echo_port);
+	address.sin_addr.s_addr = INADDR_ANY;
 
-	/* increment for subsequent accepted connections */
-	connection++;
+	if (lwip_bind(sock, (struct sockaddr *)&address, sizeof (address)) < 0)
+		return;
 
-	return ERR_OK;
-}
+	lwip_listen(sock, 0);
 
-void error_callback(void *arg,err_t err){
-  xil_printf("error\n");
-}
+	size = sizeof(remote);
 
-int start_application()
-{
-	struct tcp_pcb *pcb;
-	err_t err;
-	unsigned port = 49152;
-
-	/* create new TCP PCB structure */
-	pcb = tcp_new();
-	if (!pcb) {
-		xil_printf("Error creating PCB. Out of Memory\n\r");
-		return -1;
+	while (1) {
+		if ((new_sd = lwip_accept(sock, (struct sockaddr *)&remote, (socklen_t *)&size)) > 0) {
+			sys_thread_new("echos", process_echo_request,
+				(void*)new_sd,
+				THREAD_STACKSIZE,
+				DEFAULT_THREAD_PRIO);
+		}
 	}
-
-	/* bind to specified @port */
-	err = tcp_bind(pcb, IP_ADDR_ANY, port);
-	if (err != ERR_OK) {
-		xil_printf("Unable to bind to port %d: err = %d\n\r", port, err);
-		return -2;
-	}
-
-	tcp_err(pcb,error_callback);
-
-	/* we do not need any arguments to callback functions */
-	tcp_arg(pcb, NULL);
-
-	/* listen for connections */
-	pcb = tcp_listen(pcb);
-	if (!pcb) {
-		xil_printf("Out of memory while tcp_listen\n\r");
-		return -3;
-	}
-
-	/* specify callback to use for incoming connections */
-	tcp_accept(pcb, accept_callback);
-
-	xil_printf("TCP echo server started @ port %d\n\r", port);
-
-	return 0;
 }

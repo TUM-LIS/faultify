@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2013 Xilinx, Inc.  All rights reserved.
+ * Copyright (c) 2009 Xilinx, Inc.  All rights reserved.
  *
  * Xilinx, Inc.
  * XILINX IS PROVIDING THIS DESIGN, CODE, OR INFORMATION "AS IS" AS A
@@ -15,104 +15,57 @@
  * AND FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-#if __MICROBLAZE__ || __PPC__
-#include "arch/cc.h"
+
 #include "platform.h"
 #include "platform_config.h"
-#include "xil_cache.h"
+#if __MICROBLAZE__ || __PPC__
+#include "xenv_standalone.h"
 #include "xparameters.h"
 #include "xintc.h"
-#include "xil_exception.h"
-#ifdef STDOUT_IS_16550
+#endif
+#ifdef __MICROBLAZE__
+#include "mb_interface.h"
+#endif
+
+#ifdef PLATFORM_STDOUT_IS_16550
 #include "xuartns550_l.h"
 #endif
-
-#include "lwip/tcp.h"
-
-void
-timer_callback()
-{
-	/* we need to call tcp_fasttmr & tcp_slowtmr at intervals specified by lwIP.
-	 * It is not important that the timing is absoluetly accurate.
-	 */
-	static int odd = 1;
-	tcp_fasttmr();
-
-	odd = !odd;
-	if (odd)
-		tcp_slowtmr();
-}
-
-static XIntc intc;
-
-void platform_setup_interrupts()
-{
-	XIntc *intcp;
-	intcp = &intc;
-
-	XIntc_Initialize(intcp, XPAR_INTC_0_DEVICE_ID);
-	XIntc_Start(intcp, XIN_REAL_MODE);
-
-	/* Start the interrupt controller */
-	XIntc_MasterEnable(XPAR_INTC_0_BASEADDR);
-
-#ifdef __PPC__
-	Xil_ExceptionInit();
-	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
-			(XExceptionHandler)XIntc_DeviceInterruptHandler,
-			(void*) XPAR_INTC_0_DEVICE_ID);
-#elif __MICROBLAZE__
-	microblaze_register_handler((XInterruptHandler)XIntc_InterruptHandler, intcp);
+#ifdef __arm__
+#include "xil_types.h"
+#include "xil_io.h"
+#include "xil_assert.h"
+#include "xparameters.h"
+#include "stdio.h"
+#include "sleep.h"
+#include "xparameters.h"
+#include "xparameters_ps.h"	/* defines XPAR values */
+#include "xil_types.h"
+#include "xil_assert.h"
+#include "xil_io.h"
+#include "xil_exception.h"
+#include "xpseudo_asm.h"
+#include "xil_cache.h"
+#include "xil_printf.h"
+#include "xuartps.h"
+#include "xscugic.h"
+#include "xscutimer.h"
+#include "xemacps.h"		/* defines XEmacPs API */
 #endif
-
-	platform_setup_timer();
-
-#ifdef XPAR_ETHERNET_MAC_IP2INTC_IRPT_MASK
-	/* Enable timer and EMAC interrupts in the interrupt controller */
-	XIntc_EnableIntr(XPAR_INTC_0_BASEADDR,
-#ifdef __MICROBLAZE__
-			PLATFORM_TIMER_INTERRUPT_MASK |
-#endif
-			XPAR_ETHERNET_MAC_IP2INTC_IRPT_MASK);
-#endif
-
-
-#ifdef XPAR_INTC_0_LLTEMAC_0_VEC_ID
-#ifdef __MICROBLAZE__
-	XIntc_Enable(intcp, PLATFORM_TIMER_INTERRUPT_INTR);
-#endif
-	XIntc_Enable(intcp, XPAR_INTC_0_LLTEMAC_0_VEC_ID);
-#endif
-
-
-#ifdef XPAR_INTC_0_AXIETHERNET_0_VEC_ID
-	XIntc_Enable(intcp, PLATFORM_TIMER_INTERRUPT_INTR);
-	XIntc_Enable(intcp, XPAR_INTC_0_AXIETHERNET_0_VEC_ID);
-#endif
-
-
-#ifdef XPAR_INTC_0_EMACLITE_0_VEC_ID
-#ifdef __MICROBLAZE__
-	XIntc_Enable(intcp, PLATFORM_TIMER_INTERRUPT_INTR);
-#endif
-	XIntc_Enable(intcp, XPAR_INTC_0_EMACLITE_0_VEC_ID);
-#endif
-
-
-}
 
 void
 enable_caches()
 {
 #ifdef __PPC__
-	Xil_ICacheEnableRegion(CACHEABLE_REGION_MASK);
-	Xil_DCacheEnableRegion(CACHEABLE_REGION_MASK);
+    XCache_EnableICache(CACHEABLE_REGION_MASK);
+    XCache_EnableDCache(CACHEABLE_REGION_MASK);
 #elif __MICROBLAZE__
 #ifdef XPAR_MICROBLAZE_USE_ICACHE
-	Xil_ICacheEnable();
+    microblaze_invalidate_icache();
+    microblaze_enable_icache();
 #endif
 #ifdef XPAR_MICROBLAZE_USE_DCACHE
-	Xil_DCacheEnable();
+    microblaze_invalidate_dcache();
+    microblaze_enable_dcache();
 #endif
 #endif
 }
@@ -120,24 +73,55 @@ enable_caches()
 void
 disable_caches()
 {
-	Xil_DCacheDisable();
-	Xil_ICacheDisable();
+#ifdef __PPC__
+    XCache_DisableDCache();
+    XCache_DisableICache();
+#elif __MICROBLAZE__
+#ifdef XPAR_MICROBLAZE_USE_DCACHE
+#if !XPAR_MICROBLAZE_DCACHE_USE_WRITEBACK
+    microblaze_invalidate_dcache();
+#endif
+    microblaze_disable_dcache();
+#endif
+#ifdef XPAR_MICROBLAZE_USE_ICACHE
+    microblaze_invalidate_icache();
+    microblaze_disable_icache();
+#endif
+#endif
 }
 
-void init_platform()
+int
+init_platform()
 {
+#if __MICROBLAZE__ || __PPC__
 	enable_caches();
 
-#ifdef STDOUT_IS_16550
-	XUartNs550_SetBaud(STDOUT_BASEADDR, XPAR_XUARTNS550_CLOCK_HZ, 9600);
-	XUartNs550_SetLineControlReg(STDOUT_BASEADDR, XUN_LCR_8_DATA_BITS);
+#ifdef PLATFORM_STDOUT_IS_16550
+    /* if we have a uart 16550, then that needs to be initialized */
+    XUartNs550_SetBaud(PLATFORM_STDOUT_BASEADDR, XPAR_XUARTNS550_CLOCK_HZ, PLATFORM_BAUDRATE);
+    XUartNs550_mSetLineControlReg(PLATFORM_STDOUT_BASEADDR, XUN_LCR_8_DATA_BITS);
 #endif
 
-	platform_setup_interrupts();
+    /* initialize file system layer */
+   // if (platform_init_fs() < 0)
+   //     return -1;
+#endif
+#ifdef __arm__
+	/* initialize file system layer */
+	if (platform_init_fs() < 0)
+            return -1;
+#endif
+    return 0;
 }
 
 void cleanup_platform()
 {
+#if __MICROBLAZE__ || __PPC__
 	disable_caches();
-}
 #endif
+#ifdef __arm__
+        Xil_ICacheDisable();
+        Xil_DCacheDisable();
+#endif
+}
+
