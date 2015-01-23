@@ -1,0 +1,16 @@
+add_file -vhdl -lib dec_viterbi ../viterbi_decoder_axi4s/trunk/packages/pkg_helper.vhd
+add_file -vhdl -lib dec_viterbi ../viterbi_decoder_axi4s/trunk/packages/pkg_param.vhd
+add_file -vhdl -lib dec_viterbi ../viterbi_decoder_axi4s/trunk/packages/pkg_param_derived.vhd
+add_file -vhdl -lib dec_viterbi ../viterbi_decoder_axi4s/trunk/packages/pkg_types.vhd
+add_file -vhdl -lib dec_viterbi ../viterbi_decoder_axi4s/trunk/packages/pkg_components.vhd
+add_file -vhdl -lib dec_viterbi ../viterbi_decoder_axi4s/trunk/packages/pkg_trellis.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/generic_sp_ram.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/axi4s_buffer.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/branch_distance.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/traceback.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/acs.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/ram_ctrl.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/reorder.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/recursion.vhd
+add_file -vhdl -lib work ../viterbi_decoder_axi4s/trunk/src/dec_viterbi.vhd
+
