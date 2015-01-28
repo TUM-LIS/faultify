@@ -19,6 +19,8 @@ static int32_t llr[412] = {-6,-5,-3,5,-3,-6,4,3,-5,3,-6,7,-2,-8,0,5,-7,-2,-4,-4,
 		-5,3,1,-6,7,-3,3,3,-6,-5,-1,-5,7,3,-5,-2,0,0,-6,3,0,-6,7,-5,3,-7,1};
 
 
+
+
 #include <sys/time.h>
 
 struct timeval tval_before, tval_after, tval_result;
@@ -61,7 +63,7 @@ int main(void) {
   double pe[ftx->numInj];
   int i;
   for (i=0;i<ftx->numInj;i++)
-    pe[i] = 0.0000f;
+    pe[i] = 0.001f;
 
   r = faultify_comm_configure(ftx,ftx->numInj,&pe[0]);
   if (r) {
@@ -85,52 +87,55 @@ int main(void) {
   }
 
   /* start time meas */
-gettimeofday(&tval_before, NULL);
+  gettimeofday(&tval_before, NULL);
+  
 
-/*
-int32_t llr_dab[3096];
-FILE *fh;
-fh = fopen("dab_test_in.txt","r");
-for (i=0;i<3096;i++) {
-	fscanf(fh,"%1d",&llr_dab[i]);
-}
-for (i=0;i<3096;i++) {
-	if (llr_dab[i]==0) {
-llr_dab[i] = -6;
-}
-	if (llr_dab[i]==1) {
-llr_dab[i] = 7;
-}
-if (llr_dab[i]==8) {
-llr_dab[i] = 0;
-}
-}
-for (i=0;i<10;i++) {
-	fprintf(stderr,"%i\n",llr_dab[i]);
-}
-*/
+  FILE *fh,*fh_ref;
+  fh = fopen("WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_50/llr_BL_200_WL_55_AL_50_in.txt","r");
+  fh_ref = fopen("WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_50/decoded_BL_200_WL_55_AL_50_out.txt","r");
+  int32_t llr_f[412];
+  int32_t decoded_ref[200];
+  uint32_t sumOfFaultsRef=0;
+  uint32_t sumOfFaultsInt=0;
   /* Main loop */
-#define NUM_BLK  1
+#define NUM_BLK  10
   int blk;
   //uint8_t decoded[768];
   uint8_t decoded[200];
   for (blk = 0;blk<NUM_BLK;blk++) {
     /* load LLR */
-    /* read decoded data */
-    faultify_comm_viterbi_decode(ftx,&llr[0],412,&decoded[0]);
-    //faultify_comm_viterbi_decode(ftx,&llr_dab[0],1560,&decoded[0]);
-    //faultify_comm_viterbi_decode(ftx,&llr_dab[1560],1560,&decoded[384]);
-
-    for (i=0;i<200;i++) {
-      printf("%u\n",decoded[i]);
+    for (i=0;i<412;i++) {
+      fscanf(fh,"%i",&llr_f[i]);
     }
-    printf("\n");
+    for (i=0;i<200;i++) {
+      fscanf(fh_ref,"%i",&decoded_ref[i]);
+    }
+    
+
+    /* read decoded data */
+    faultify_comm_viterbi_decode(ftx,&llr_f[0],412,&decoded[0]);
+    
+    /* check for errors */
+    /* last bit wrong as it remains in axis fifo */
+    for (i=0;i<199;i++) {
+      if (decoded[i] != decoded_ref[i]*3) {
+	//printf("\n E@%u %u!=%u\n",i,decoded[i],decoded_ref[i]*3);
+	sumOfFaultsRef++;
+      }
+    }
+    for (i=0;i<199;i++) {
+      if ((decoded[i]&0x01) != (decoded[i]>>1)) {
+	//printf("\n E@%u \n",i);
+	sumOfFaultsInt++;
+      }
+    }
     /* read back temporary sim result */
+    /* TODO */
   }
   /* stop time meas */
   gettimeofday(&tval_after, NULL);
   timersub(&tval_after, &tval_before, &tval_result);
-
+  
   
   /* Stop the free run */
   r = faultify_comm_stop_free_run(ftx,&(ftx->numCycles),result);
@@ -138,12 +143,15 @@ for (i=0;i<10;i++) {
   for (i=0;i<ftx->numOut;i++) {
     printf("%u\n",result[i]);
   }
-
-
+  printf("SOF ref %u\n",sumOfFaultsRef);
+  printf("SOF int %u\n",sumOfFaultsInt);
   r = faultify_comm_disconnect(ftx);
 
   printf("Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
-  printf("average decoded kbits/s: %f\n",(double)(NUM_BLK*200)/tval_result.tv_sec/1024);
+  printf("average decoded kbits/s: %f\n",(double)(NUM_BLK*412)/tval_result.tv_sec/1024);
  
+
+  fclose(fh);
+  fclose(fh_ref);
   return 0;
 }

@@ -117,7 +117,7 @@ entity faultify_axi_wrapper is
     (
       -- ADD USER GENERICS BELOW THIS LINE ---------------
       --USER generics added here
-      numInj : integer := 282;
+      numInj : integer := 200;
       numIn  : integer := 69;
       numOut : integer := 5;
       -- ADD USER GENERICS ABOVE THIS LINE ---------------

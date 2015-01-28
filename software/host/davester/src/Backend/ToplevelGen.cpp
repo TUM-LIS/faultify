@@ -261,7 +261,7 @@ void ModuleToplevelGen::emitGocWrapper(ofstream &of, vector<Net*> origPins, vect
 	numOutp++;
       }
     }
-    
+    cerr << numInp+numOutp << ":" << absNumIn+absNumOut << endl;
     if ((*nit)->getPortDirection()!=Net::NONE && (numInp+numOutp < absNumIn+absNumOut)) {
       of << ",\n";
     }

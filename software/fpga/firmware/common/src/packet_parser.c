@@ -1,14 +1,17 @@
 #include "packet_parser.h"
 
 // TODO: store in HW
+// fpu100_div
+//uint32_t numOut = 41;
+
 // b14
 //uint32_t numOut = 54;
 // fpu100_add
 //uint32_t numOut = 41;
 // qr
-uint32_t numOut = 202;
+//uint32_t numOut = 202;
 // viterbi
-//uint32_t numOut = 5;
+uint32_t numOut = 5;
 uint32_t numInj;
 
 
@@ -119,7 +122,82 @@ int comm_speed_test(int sd,unsigned char * data,int len) {
 }
 
 int comm_viterbi_decode(int sd,unsigned char * data,int len) {
+  XLlFifo * ctrl_fifo;
+  XLlFifo * data_fifo;
+  
+  ctrl_fifo = malloc(sizeof(XLlFifo));
+  if (ctrl_fifo==NULL)
+    print("malloc error ctrl_fifo...");
+  data_fifo = malloc(sizeof(XLlFifo));
+  if (data_fifo==NULL)
+    print("malloc error data_fifo...");
+  
+  XLlFifo_Initialize(ctrl_fifo, XPAR_AXI_FIFO_MM_S_CTRL_BASEADDR);
+  XLlFifo_Initialize(data_fifo, XPAR_AXI_FIFO_MM_S_DATA_BASEADDR);
+  uint32_t config_data=0;
+  config_data = (55 << 16);
+  config_data |= 50;
+  XLlFifo_Write(ctrl_fifo, &config_data, 4);
+  XLlFifo_TxSetLen(ctrl_fifo, 4);
+  
+  int fr=0;
+  uint32_t temp1,temp2,temp_out;
+  for (fr=0;fr<412;fr+=2) {
+    temp_out = 0;
+    temp1 = (data[16+fr] & 0xF);
+    temp2 = (data[16+fr+1] & 0xF);
+    temp_out = (temp2 << 8);
+    temp_out |= temp1;
+    XLlFifo_Write(data_fifo, &temp_out, 4);
+  }
+  XLlFifo_TxSetLen(data_fifo, 206*4);
 
+  
+  while (!XLlFifo_RxOccupancy(data_fifo)) {}
+  uint32_t buffer[200];
+  int idx=0;
+  while (XLlFifo_RxOccupancy(data_fifo)) {
+    //xil_printf("%x\n",XLlFifo_RxOccupancy(data_fifo));
+    int frame_len = XLlFifo_RxGetLen(data_fifo);
+    while (frame_len) {
+      XLlFifo_Read(data_fifo, &buffer[idx++], 4);
+      //xil_printf("%x\n",buffer[idx-1]);
+      frame_len -= 4;
+    }
+  }
+  XLlFifo_Read(data_fifo, &buffer[199], 4);
+
+  int send_len = 16+200;
+  uint8_t * send_buffer;
+  send_buffer = (uint8_t *)malloc(send_len);
+  if (send_buffer == NULL) {
+    xil_printf("malloc error: %s\n",__FUNCTION__);
+    return 1;
+  }
+  // magic number
+  comm_packet_set_magic_number(send_buffer);
+  // type
+  comm_packet_set_packet_type(send_buffer,cmd_user_data_type_1);
+  // req/answ
+  send_buffer[10] = 0x00;
+  // last
+  send_buffer[11] = 0x01;
+  // length
+  comm_packet_set_packet_length(send_buffer,200);
+  
+  // payload
+  for (idx=0;idx<200;idx++) {
+    send_buffer[16+idx] = buffer[idx];
+  }
+  
+  if (write(sd, send_buffer, send_len) < 0) {
+    xil_printf("Closing socket %d\r\n", sd);
+    close(sd);
+    return 0;
+  }
+  free(ctrl_fifo);
+  free(data_fifo);
+  free(send_buffer);
   return 0;
   
 

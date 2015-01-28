@@ -58,8 +58,8 @@ void ModuleEmit::emit(IR* ir,ofstream &of, Module* mod, string toplevel) {
 	  if ((*vit).second.first != "NULL")
 	    of << "[" << (*vit).second.first << ":" << (*vit).second.second << "]";
       }
-      //of << "}";
-      // of << ")";
+      of << "}";
+      of << ")";
     }
     
   }  

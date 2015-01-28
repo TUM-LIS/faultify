@@ -14,7 +14,7 @@ end
 fclose(prob_h);
 
 % num cycles
-num_cycles = 1E5;
+num_cycles = 1E7;
 cmd = [cmd ' ' '202 414 probs.txt ' num2str(num_cycles)];
 
 [stat, ret] = unix(cmd);

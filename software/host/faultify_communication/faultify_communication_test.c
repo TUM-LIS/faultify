@@ -34,11 +34,13 @@ int main(void) {
   }
 
   
-  ftx->numInj = 282;
+  ftx->numInj = 414;
+  //ftx->numInj = 282;
   double pe[ftx->numInj];
   int i;
   for (i=0;i<ftx->numInj;i++)
     pe[i] = 0.5f;
+ 
   
   r = faultify_comm_configure(ftx,ftx->numInj,&pe[0]);
   if (r) {
@@ -49,12 +51,14 @@ int main(void) {
   }
   
 
-  ftx->numOut=5;
+  ftx->numOut=202;
+  //ftx->numOut=5;
   ftx->numCycles = 100000;
   uint32_t result[ftx->numOut];
   for (i=0;i<ftx->numOut;i++) {
     result[i] = 0;
   }
+  
   r = faultify_comm_run(ftx,ftx->numCycles,result);
   if (r) {
     fprintf(stderr,"failed to run the emulator\n");
@@ -64,7 +68,8 @@ int main(void) {
   for (i=0;i<ftx->numOut;i++) {
     printf("%f\n",(double)result[i]/ftx->numCycles);
   }
-  
+
+  r = faultify_comm_configure(ftx,ftx->numInj,&pe[0]);
   r = faultify_comm_start_free_run(ftx);
   if (r) {
     fprintf(stderr,"failed to start a free run\n");
@@ -79,18 +84,19 @@ int main(void) {
   for (i=0;i<ftx->numOut;i++) {
     printf("%u\n",result[i]);
   }
+  
 
-
+  /*
   gettimeofday(&tval_before, NULL);
 
-for(i=0;i<10;i++) {
-  r = faultify_comm_speed_test(ftx,2048);
-}
+  for(i=0;i<1;i++) {
+    r = faultify_comm_speed_test(ftx,4096);
+  }
   gettimeofday(&tval_after, NULL);
   timersub(&tval_after, &tval_before, &tval_result);
   printf("Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
   printf("average decoded kbits/s: %f\n",(double)(100*2048)/tval_result.tv_sec/1024);
- 
+  */
   r = faultify_comm_disconnect(ftx);
 
 

@@ -21,7 +21,7 @@ int8_t faultify_comm_init(struct faultify_handle **ftx) {
   setsockopt(fh->sockfd, SOL_SOCKET,
 	     SO_RCVTIMEO, (char *)&tv,
 	     sizeof(struct timeval));
-
+  
   fh->version_host_software[0] = HOST_SW_VER_MAJOR;
   fh->version_host_software[1] = HOST_SW_VER_MINOR;
 
@@ -31,7 +31,7 @@ int8_t faultify_comm_init(struct faultify_handle **ftx) {
 
 int8_t faultify_comm_connect(struct faultify_handle *ftx) {
 
-  ftx->portno = 7;
+  ftx->portno = 49152;
   ftx->server = gethostbyname("192.168.1.10");
   if (ftx->server == NULL) {
     return 1;
@@ -64,7 +64,7 @@ int8_t faultify_comm_identify(struct faultify_handle *ftx) {
   bzero(send_buffer,16);
   uint8_t recv_buffer[20];
   bzero(recv_buffer,20);
-
+  
   //  magic number
   faultify_packet_set_magic_number(send_buffer);
   
@@ -83,7 +83,7 @@ int8_t faultify_comm_identify(struct faultify_handle *ftx) {
 
   int r;
   
-  r = write(ftx->sockfd,send_buffer,16);
+  r = send(ftx->sockfd,send_buffer,16,0);
   if (r<0) {
     return 1;
   }
@@ -215,28 +215,34 @@ int8_t faultify_comm_speed_test(struct faultify_handle *ftx,uint32_t numData) {
   for (ii=0;ii<numData;ii++) {
     send_buffer[16+ii] =ii;
   }
-  // split packets HACK
-#define PKG_LEN 1024
   int r;
   int pkg=0,idx=0;
-	printf("sending %i packets\n",(16+numData)/PKG_LEN);
+#if 0
+  r = write(ftx->sockfd,&send_buffer[0],(16+numData));
+  if (r<0) {
+    return 1;
+  }
+#else
+  // split packets HACK
+#define PKG_LEN 1024
+  printf("sending %i packets\n",(16+numData)/PKG_LEN);
   for (pkg=0;pkg<((16+numData)/PKG_LEN);pkg++) {
-    	r = write(ftx->sockfd,&send_buffer[pkg*PKG_LEN],PKG_LEN);
-	printf("sent: %u\n",r);
-        usleep(50000);
+    r = write(ftx->sockfd,&send_buffer[pkg*PKG_LEN],PKG_LEN);
+    printf("sent: %u\n",r);
+    usleep(50000);
     if (r<0) {
       return 1;
     } else {
       idx +=PKG_LEN;
     }
-
+    
   }
   //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
   r = write(ftx->sockfd,&send_buffer[idx],(16+numData)-(pkg*PKG_LEN));
   if (r<0) {
     return 1;
   }
-
+#endif
 
   ssize_t bytes_read=0;
 	idx = 0;
@@ -301,8 +307,16 @@ int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, ui
   int ii;
   for (ii=0;ii<len;ii++) {
     memcpy(&send_buffer[16+ii],&llr[ii],sizeof(uint8_t));
+  } 
+ int r;
+
+#if 0
+  r = write(ftx->sockfd,&send_buffer[0],(16+len));
+  if (r<0) {
+    return 1;
   }
-  int r;
+#else
+ 
   int pkg=0,idx=0;
   for (pkg=0;pkg<((16+len)/1024);pkg++) {
     r = write(ftx->sockfd,&send_buffer[pkg*1024],1024);
@@ -315,9 +329,10 @@ int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, ui
   }
   //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
   r = write(ftx->sockfd,&send_buffer[idx],(16+len)-(pkg*1024));
- if (r<0) {
+  if (r<0) {
     return 1;
   }
+#endif
   r = read(ftx->sockfd,recv_buffer,16+(len/2-6));
   if (r < 0) 
     printf("ERROR reading from socket");
@@ -550,6 +565,14 @@ int8_t faultify_comm_configure(struct faultify_handle *ftx, uint32_t len,double 
   }
   int r;
   int pkg=0,idx=0;
+
+#if 1
+  r = send(ftx->sockfd,&send_buffer[idx],(16+sizeof(double)*len),0);
+  if (r!=(16+sizeof(double)*len)) {
+    printf("DBG: sending failed\n");
+    return 1;
+  }
+#else
   for (pkg=0;pkg<((16+sizeof(double)*len)/1024);pkg++) {
   	r = write(ftx->sockfd,&send_buffer[pkg*1024],1024);
   	if (r<0) {
@@ -557,14 +580,14 @@ int8_t faultify_comm_configure(struct faultify_handle *ftx, uint32_t len,double 
   	} else {
 		idx +=1024;
 	}
-	usleep(100000);
+	usleep(10000);
   }
   //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
   r = write(ftx->sockfd,&send_buffer[idx],(16+sizeof(double)*len)-(pkg*1024));
   if (r<0) {
     return 1;
   }
-
+#endif
   r = read(ftx->sockfd,recv_buffer,16);
   if (r < 0) 
     printf("%s ERROR reading from socket",__FUNCTION__);

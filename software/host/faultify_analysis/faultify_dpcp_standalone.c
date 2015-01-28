@@ -6,9 +6,31 @@
 #include "faultify_simulation_campaigns.h"
 
 #define b14 0
-#define fpu100 0
+#define fpu100_add 0
+#define fpu100_div 0
+#define fpu100_mul 1
+#define fpu100_sqrt 0
+
 #define qr 0
-#define viterbi 1
+#define viterbi 0
+
+#if fpu100_div
+#define numInj 268
+#define numIn 70
+#define numOut 41
+#endif
+
+#if fpu100_mul
+#define numInj 142
+#define numIn 70
+#define numOut 41
+#endif
+
+#if fpu100_sqrt
+#define numInj 302
+#define numIn 70
+#define numOut 41
+#endif
 
 #if b14
 #define numInj 216
@@ -16,7 +38,7 @@
 #define numOut 54
 #endif
 
-#if fpu100
+#if fpu100_add
 #define numInj 140
 #define numIn 70
 #define numOut 41
@@ -85,10 +107,10 @@ int main (void) {
   for(out=20;out<52;out++) /*b14*/
     fsc.max_output_error_probability[out] = 0.5f;
 #endif
-#if fpu100 
- for(out=9;out<31;out++) /*fpu100*/
-
-for(out=34;out<40;out++) /*fpu100*/
+#if (fpu100_sum || fpu100_div || fpu100_mul || fpu100_sqrt) 
+  for(out=9;out<31;out++) /*fpu100*/
+    fsc.max_output_error_probability[out] = 0.5f;
+  for(out=33;out<40;out++) /*fpu100*/
     fsc.max_output_error_probability[out] = 0.5f;
 #endif
 #if qr
@@ -100,12 +122,12 @@ for(out=34;out<40;out++) /*fpu100*/
     fsc.max_output_error_probability[2] = 0.5f;
 #endif
 
- fsc.simCycles = 10000000;
-
-  faultify_simulation_create_probability_relation_matrix(fsc.simCycles);
-
-  faultify_simulation_find_data_path_registers();
-
+    fsc.simCycles = 10000000;
+    
+    faultify_simulation_create_probability_relation_matrix(fsc.simCycles);
+    
+    faultify_simulation_find_data_path_registers();
+    
   // emitting PRM
   for (inj=0;inj<numInj;inj++) {
     for (out=0;out<numOut;out++) {

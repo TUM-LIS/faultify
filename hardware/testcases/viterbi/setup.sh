@@ -22,7 +22,7 @@ rm stdout.log
 
 mkdir log
 mkdir ports
-mkdir fpga_sim
+#mkdir fpga_sim
 mkdir fpga_syn
 
 
@@ -62,8 +62,9 @@ read reset
 echo ""
 echo -e "\e[1;31;40mModifying Netlist...\e[0m"
 cd fpga_sim 
-../../../../software/host/davester/davester "$fpga_netlist" "$toplevel" "$clk" "$reset" FD p_O_FD FDE p_O_FDE FDRE p_O_FDRE FDC p_O_FDC FDP p_O_FDP FDCE p_O_FDCE >> ../log/davester.log
+#../../../../software/host/davester/davester "$fpga_netlist" "$toplevel" "$clk" "$reset" FD p_O_FD FDE p_O_FDE FDR p_O_FDR FDRE p_O_FDRE FDC p_O_FDC FDP p_O_FDP FDCE p_O_FDCE >> ../log/davester.log
 
+../../../../software/host/davester/davester "$fpga_netlist" "$toplevel" "$clk" "$reset" FDR p_O_FDR >> ../log/davester.log
 
 cp -r ../../../base_system/xpsLibraryPath/ .
 mv output.v xpsLibraryPath/libFaultify/pcores/faultify_axi_wrapper_v1_00_a/hdl/verilog/

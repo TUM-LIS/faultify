@@ -18,8 +18,8 @@ opt_pR_30_5_6 = [.0  .0 .0001 .0003 .0009 .0025 .5 .5 .5 .5 .5 .5];
 %    0.5000    0.5000    0.5000    0.5000    0.5000    0.5000    0.0025    0.0009    0.0003    0.0001    0.0000
 %    0.0000
 
-opt_pQ = opt_pQ_30_5_6;
-opt_pR = opt_pR_30_5_6;
+opt_pQ = opt_pQ_50_6_7;
+opt_pR = opt_pR_50_6_7;
 p_q_r = [opt_pQ opt_pQ opt_pQ opt_pQ];
 p_q_i = [opt_pQ opt_pQ opt_pQ opt_pQ];
 p_r_r = [opt_pR opt_pR opt_pR opt_pR];
@@ -56,7 +56,7 @@ for p= 1:numel(idxc)
    notInConst = (sum((r-maxVec)>0)>0);
    for retry=1:10
        if (notInConst==0)
-           sprintf('retry %i - %d - %i\n',p,start_val,retry)
+           sprintf('retry %i - %i\n',p,retry)
            r = test_circuit(ttc,maxVec);
            r(r>.5) = .5;
            notInConst = (sum((r-maxVec)>0)>0);
@@ -79,37 +79,64 @@ for ii= 1:numel(coarse_idx)
   end
 end
 %%
-tt = zeros(1,numInj);
-tt(ttc>0) = .5;
-r= ones(numOut,1);
-notInConst = 1;
-for p= 1:numel(idx2)
-    start_val = 0.5;
-    while (notInConst)
-        sprintf('%i - %i\n',p,start_val)
-        tt(idx2(p)) = start_val;
-        r = test_circuit(tt,maxVec);
-        r(r>.5) = .5;
-        notInConst = (sum((r-maxVec)>0)>0);
-        % retest 
-        for retry=1:10
-            if (notInConst==0 && start_val ~= 0.0)
-                sprintf('retry %i - %d - %i\n',p,start_val,retry)
-                r = test_circuit(tt,maxVec);
-                r(r>.5) = .5;
-                notInConst = (sum((r-maxVec)>0)>0);
+if (0)
+    
+    tt = zeros(1,numInj);
+    tt(ttc>0) = .5;
+    r= ones(numOut,1);
+    notInConst = 1;
+    for p= 1:numel(idx2)
+        start_val = 0.5;
+        while (notInConst)
+            sprintf('%i - %i\n',p,start_val)
+            tt(idx2(p)) = start_val;
+            r = test_circuit(tt,maxVec);
+            r(r>.5) = .5;
+            notInConst = (sum((r-maxVec)>0)>0);
+            % retest
+            for retry=1:10
+                if (notInConst==0 && start_val ~= 0.0)
+                    sprintf('retry %i - %d - %i\n',p,start_val,retry)
+                    r = test_circuit(tt,maxVec);
+                    r(r>.5) = .5;
+                    notInConst = (sum((r-maxVec)>0)>0);
+                end
+            end
+            if (notInConst)
+                start_val = start_val - 0.001;
+                if (start_val<0)
+                    start_val = 0;
+                end
             end
         end
-        if (notInConst)
-            start_val = start_val - 0.001;
-            if (start_val<0)
-                start_val = 0;
+        tt(1:p)
+        r= ones(numOut,1);
+        notInConst = 1;
+    end
+    
+else
+    ind = idx2;
+    isInConstr = 1;
+    ind_t = [];
+    tt = zeros(1,numInj);
+    tt(ttc>0) = .5;
+    while (isInConstr)
+        isInConstr = 0;
+        ind(ind_t==0) = [];
+        ind_t = ind(1,:);
+        for i=1:numel(ind)
+            tt(ind(i)) = tt(ind(i)) + 0.0001
+            r = test_circuit(tt,maxVec);
+            r(r>.5) = .5;
+            notInConst = (sum((r-maxVec)>0)>0);
+            if (notInConst)
+                tt(ind(i)) = tt(ind(i)) - 0.0001;
+                ind_t(i) = 0;
+            else
+                isInConstr = 1;
             end
         end
     end
-    tt(1:p)
-    r= ones(numOut,1);
-    notInConst = 1;
 end
 %%
 save opt_dist.mat tt

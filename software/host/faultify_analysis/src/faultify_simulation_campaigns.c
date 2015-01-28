@@ -92,7 +92,46 @@ int faultify_simulation_create_probability_relation_matrix(uint32_t numCycles) {
   return 1;
 }
 
+int faultify_simulation_create_probability_relation_matrix_viterbi(int32_t * llr) {
+  
+  int inj,out,i;
+  
+  // error probablities at registers
+  double * probabilities;
+  double * zeros;
+  // sum of errors at output of circuit
+  uint32_t * soe_out;
+  probabilities = (double*) malloc(sizeof(double)*fsc.numInj);
+  soe_out = (uint32_t*) malloc(sizeof(uint32_t)*fsc.numOut);
+  zeros = (double*) malloc(sizeof(double)*fsc.numInj);
+  for (i=0;i<fsc.numInj;i++){
+    zeros[i] = 0.0;
+  }
+  for (inj=0;inj<fsc.numInj;inj++) {
+    fprintf(stderr,"%u \t",inj);
+    for (i=0;i<fsc.numInj;i++){
+      probabilities[i] = 0.0;
+    }
+    probabilities[inj] = 0.5; // or 1.0
+    // run campaign
+    uint8_t tmp[200];
+    faultify_comm_configure(fsc.ftx,fsc.numInj,probabilities);
+     faultify_comm_start_free_run(fsc.ftx);
+    for (i=0;i<20;i++) {
+      faultify_comm_viterbi_decode(fsc.ftx,&llr[0],412,tmp);
+    }
+    faultify_comm_stop_free_run(fsc.ftx,&(fsc.ftx->numCycles),&soe_out[0]);
 
+    // create p_p_matrix
+    for (out=0;out<fsc.numOut;out++) {
+      fsc.probability_relation_matrix_p_0_5[inj*fsc.numOut+out] = soe_out[out];
+    }
+      
+  }
+  fprintf(stderr,"\n");
+
+  return 1;
+}
 
 
 int faultify_simulation_find_output_registers()
@@ -166,7 +205,10 @@ int faultify_simulation_find_data_path_registers() {
 	isValid = 0;
       }
     }
-    isNonZero = 0;
+    /**************
+needed ? or not ?
+    ****************/
+    isNonZero = 1;
     for (j=0;j<tmp2->len;j++) {
       if (fsc.probability_relation_matrix[i*fsc.numOut+g_array_index(tmp2, int, j)] > 0) {
       	//isNonZero = 1;
