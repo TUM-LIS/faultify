@@ -16,7 +16,7 @@
 
 struct faultify_handle *ftx;
 
-int main (void) {
+int main (int argc, char *argv[]) {
 
   int out,o,inj;
   FILE *fh,*fh_prm;
@@ -60,21 +60,82 @@ int main (void) {
   }
   
 #if viterbi
-    fsc.max_output_error_probability[2] = 0.5f;
+  //fsc.max_output_error_probability[2] = 0.5f;
 #endif
 
     fsc.simCycles = 100000;
 
     FILE *fhf;
-    fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_50/llr_BL_200_WL_55_AL_50_in.txt","r");
-    int32_t llr[412];
+    int db;
+    
+    if (argc>1) {
+      db = atoi(argv[1]);
+	}		
+    else {
+      db = 0;
+	}
+    printf("dB: %i\n",db);
+    if (db==0)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_0/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==2)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_2/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==4)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_4/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==6)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_6/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==8)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_8/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==10)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_10/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==12)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_12/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==14)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_14/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==16)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_16/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==18)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_18/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==20)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_20/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==22)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_22/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==24)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_24/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==26)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_26/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==28)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_28/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==30)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_30/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==32)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_32/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==34)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_34/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==36)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_36/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==38)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_38/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==40)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_40/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==42)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_42/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==44)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_44/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==46)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_46/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==48)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_48/llr_BL_200_WL_55_AL_50_in.txt","r");
+    if (db==50)
+      fhf = fopen("../faultify_viterbi/WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_50/llr_BL_200_WL_55_AL_50_in.txt","r");
+   
+    int32_t llr[412*500];
     int i;
-    for (i=0;i<412;i++) {
+    for (i=0;i<500*412;i++) {
       fscanf(fhf,"%i",&llr[i]);
     }
 
     //faultify_simulation_create_probability_relation_matrix(fsc.simCycles);
-    faultify_simulation_create_probability_relation_matrix_viterbi(&llr[0]);
+    faultify_simulation_create_probability_relation_matrix_viterbi(&llr[0],500);
 
     faultify_simulation_find_data_path_registers();
     

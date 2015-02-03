@@ -57,13 +57,15 @@ int main(void) {
 
   // r = faultify_comm_stop_free_run(ftx,NULL,NULL);
 
-  ftx->numInj = 282;
+  ftx->numInj = 200;
+  //ftx->numInj = 178;
   ftx->numOut=5;
   ftx->numCycles = 0;
   double pe[ftx->numInj];
   int i;
   for (i=0;i<ftx->numInj;i++)
-    pe[i] = 0.001f;
+    pe[i] = 0.00f;
+  pe[1] = 0.5f;
 
   r = faultify_comm_configure(ftx,ftx->numInj,&pe[0]);
   if (r) {
@@ -91,14 +93,14 @@ int main(void) {
   
 
   FILE *fh,*fh_ref;
-  fh = fopen("WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_50/llr_BL_200_WL_55_AL_50_in.txt","r");
-  fh_ref = fopen("WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_50/decoded_BL_200_WL_55_AL_50_out.txt","r");
+  fh = fopen("WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_10/llr_BL_200_WL_55_AL_50_in.txt","r");
+  fh_ref = fopen("WiFi_121_91_eigene_Daten/WiFi_121_91_eigene_Daten_EbNo_10/decoded_BL_200_WL_55_AL_50_out.txt","r");
   int32_t llr_f[412];
   int32_t decoded_ref[200];
   uint32_t sumOfFaultsRef=0;
   uint32_t sumOfFaultsInt=0;
   /* Main loop */
-#define NUM_BLK  10
+#define NUM_BLK  200
   int blk;
   //uint8_t decoded[768];
   uint8_t decoded[200];

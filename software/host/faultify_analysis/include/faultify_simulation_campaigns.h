@@ -42,7 +42,7 @@ int faultify_simulation_set_max_output_error_probability_at(uint32_t injPos,doub
 
 
 int faultify_simulation_create_probability_relation_matrix(uint32_t numCycles);
-int faultify_simulation_create_probability_relation_matrix_viterbi(int32_t *llr);
+int faultify_simulation_create_probability_relation_matrix_viterbi(int32_t *llr,uint32_t num_blks);
 
 int faultify_simulation_find_output_registers();
 

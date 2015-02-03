@@ -1,14 +1,14 @@
 
 % Changeable Parameter
-N_blocks = 10;
+N_blocks = 1000;
 N_Sim = 3;
 % 
 BL_START = 200;
 BL_STEP = 1;
 BL_END = 200;
 % 
-EbNo_START = 30;
-EbNo_STEP = 10;
+EbNo_START = 20;
+EbNo_STEP = 2;
 EbNo_END = 50;
 
 ep = [5,9

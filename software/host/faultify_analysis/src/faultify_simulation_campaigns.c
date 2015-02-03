@@ -92,7 +92,7 @@ int faultify_simulation_create_probability_relation_matrix(uint32_t numCycles) {
   return 1;
 }
 
-int faultify_simulation_create_probability_relation_matrix_viterbi(int32_t * llr) {
+int faultify_simulation_create_probability_relation_matrix_viterbi(int32_t * llr,uint32_t num_blks) {
   
   int inj,out,i;
   
@@ -117,8 +117,8 @@ int faultify_simulation_create_probability_relation_matrix_viterbi(int32_t * llr
     uint8_t tmp[200];
     faultify_comm_configure(fsc.ftx,fsc.numInj,probabilities);
      faultify_comm_start_free_run(fsc.ftx);
-    for (i=0;i<20;i++) {
-      faultify_comm_viterbi_decode(fsc.ftx,&llr[0],412,tmp);
+    for (i=0;i<num_blks;i++) {
+      faultify_comm_viterbi_decode(fsc.ftx,&llr[(412*i)],412,tmp);
     }
     faultify_comm_stop_free_run(fsc.ftx,&(fsc.ftx->numCycles),&soe_out[0]);
 

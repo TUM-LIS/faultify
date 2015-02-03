@@ -7,9 +7,9 @@ use work.approximationTable.all;
 entity static_approximation_wrapper is
   
   generic (
-    numInj : integer := 414;
-    numIn  : integer := 111;
-    numOut : integer := 202);
+    numInj : integer := 268;
+    numIn  : integer := 70;
+    numOut : integer := 41);
 
   port (
     clk             : in  std_logic;
