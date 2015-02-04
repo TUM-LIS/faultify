@@ -1,0 +1,11 @@
+-p
+xc6vlx240tff1156-1
+-lang
+vhdl
+-intstyle
+default
+-lp
+../xpsLibraryPath_asic_400_599/
+-msg
+__xps/ise/xmsgprops.lst
+system.mhs
