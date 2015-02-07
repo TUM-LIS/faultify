@@ -513,7 +513,7 @@ begin
 
   faultify_top_1 : faultify_top
     generic map (
-      numInj => 356,
+      numInj => 346,
       numIn  => 19,
       numOut => 19)
     port map (

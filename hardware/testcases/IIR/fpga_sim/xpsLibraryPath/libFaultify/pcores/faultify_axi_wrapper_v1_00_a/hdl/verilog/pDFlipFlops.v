@@ -438,7 +438,7 @@ endmodule
 // p_O_FDE	 FDE error at output
 /////////////////////////////////////////////////////////////////////////
 module p_O_FDE (Q,D,C,CE,E);
-
+parameter INIT=1'b0;
 output Q;
 input  D;
 input  C;
@@ -447,7 +447,7 @@ input CE;
 wire   Qtemp;
 
 // Xilinx FD instance
-FDE FD_z (.Q(Qtemp),.D(D),.C(C),.CE(CE));
+FDE #(.INIT(INIT)) p_O_FDEFD_z (.Q(Qtemp),.D(D),.C(C),.CE(CE));
 
 // Error injection
 xor (Q,Qtemp,E);

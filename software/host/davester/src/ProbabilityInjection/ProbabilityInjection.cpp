@@ -24,7 +24,7 @@ void ProbabilityInjection::execute(IR* ir,string toplevel,vector<string> element
     /* find Instances about to replace in all instances of all modules */
     for (vector<Module*>::iterator it = mod.begin(); it != mod.end(); ++it) {
 	// dgb
-      cout << (*it)->getName() << ":" << (*it)->getName().compare("acsZ0_") << endl;
+      //cout << (*it)->getName() << ":" << (*it)->getName().compare("acsZ0_") << endl;
       //if ((*it)->getName().compare("acsZ0_") < 3 ) 
 //	{
 	 // cout << "got module..." << endl;
