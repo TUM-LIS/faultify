@@ -111,9 +111,33 @@ tt_40 = x_40['tt']
 tt_50 = x_50['tt']
 
 from matplotlib.patches import Ellipse
-
 import matplotlib.pyplot as plt
 import numpy as np
+
+import pylab
+from pylab import arange,pi,sin,cos,sqrt
+
+
+fig_width_pt = 253.04987 # Get this from LaTeX using \showthe\columnwidth
+inches_per_pt = 1.0/72.27               # Convert pt to inches
+golden_mean = (sqrt(5)-1.0)/2.0         # Aesthetic ratio
+fig_width = fig_width_pt*inches_per_pt  # width in inches
+fig_height =fig_width*golden_mean+0.0       # height in inches
+fig_size = [fig_width,fig_height]
+params = {'backend': 'ps',
+          'axes.labelsize': 8,
+          'text.fontsize': 8,
+          'legend.fontsize': 8,
+          'xtick.labelsize': 8,
+          'ytick.labelsize': 8,
+          'text.usetex': True,
+          'figure.figsize': fig_size}
+
+pylab.rcParams.update(params)
+
+import matplotlib.gridspec as gridspec
+gs1 = gridspec.GridSpec(2, 2)
+gs1.update(left=0.18, right=.95,bottom=.16,top=0.95, hspace=0.5)
 t = np.arange(0, 414, 1)
 
 #print t.shape
@@ -124,33 +148,35 @@ print "40 dB"
 print sum(tt_40[0])
 print "50 dB"
 print sum(tt_50[0])
-fig1 = plt.figure()
+fig1 = pylab.figure()
+pylab.clf()
+#pylab.axes([0.18,0.1,0.95-0.17,0.95-0.22])
 
-ax1 = plt.subplot(211)
-l30, = plt.plot(t,tt_30[0],'r--',lw=1,ms=10,mew=1,label='30 dB')
-l40, = plt.plot(t,tt_40[0],'g-.',lw=1,ms=10,mew=1,label='40 dB')
-l50, = plt.plot(t,tt_50[0],'b-',lw=1,ms=10,mew=1,label='50 dB')
-plt.xlabel('Flip-Flop index')
-plt.ylabel(r'Tolerated $p_e$')
-plt.text(250,.3,'QR', fontsize=30,style='italic', fontweight='bold')
-plt.legend()
 
-ax2 = plt.subplot(212)
-l30, = plt.plot(t,tt_30[0],'r--',lw=1,ms=10,mew=1,label='30 dB')
-l40, = plt.plot(t,tt_40[0],'g-.',lw=1,ms=10,mew=1,label='40 dB')
-l50, = plt.plot(t,tt_50[0],'b-',lw=1,ms=10,mew=1,label='50 dB')
-#plt.legend()
+ax1 = pylab.subplot(gs1[0,:])
+l30, = pylab.plot(t,tt_30[0],'r--',label='30 dB')
+l40, = pylab.plot(t,tt_40[0],'g-.',label='40 dB')
+l50, = pylab.plot(t,tt_50[0],'b-',label='50 dB')
+pylab.xlabel('Flip-Flop index')
+pylab.ylabel(r'Tolerated $p_e$')
+pylab.text(250,.3,'QR', fontsize=8,style='italic', fontweight='bold')
+pylab.legend()
 
-plt.xlabel('Flip-Flop index')
-plt.ylabel(r'Tolerated $p_e$')
-#plt.text(250,.3,'QR', fontsize=30,style='italic', fontweight='bold')
-ax2.set_ylim([0, 0.002])
+ax2 = pylab.subplot(gs1[1:,:])
+l30, = pylab.plot(t,tt_30[0],'r--',label='30 dB')
+l40, = pylab.plot(t,tt_40[0],'g-.',label='40 dB')
+l50, = pylab.plot(t,tt_50[0],'b-',label='50 dB')
+#pylab.legend()
+
+pylab.xlabel('Flip-Flop index')
+pylab.ylabel(r'Tolerated $p_e$')
+#pylab.text(250,.3,'QR', fontsize=30,style='italic', fontweight='bold')
+ax2.set_ylim([0, 0.001])
 ax2.set_xlim([10, 180])
 
 zoom_effect01(ax1, ax2,10, 160)
 #zoom_effect02(ax1, ax2)
 
 
-
-
-plt.show()
+pylab.savefig('optimization_qr.pdf')
+#pylab.show()
