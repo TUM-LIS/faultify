@@ -1,8 +1,8 @@
 
-for i=36:2:50
+for i=0
     i
-   cmd = ['../faultify_analysis/faultify_dpcp_viterbi ' num2str(i)]; 
-   unix(cmd)
-   cmd2 = ['cp dpcp.txt dpcp_part3_' num2str(i) '.txt'];
-   unix(cmd2)
+   cmd = ['cd ../../../../../software/host/faultify_analysis/;./faultify_dpcp_viterbi ' num2str(i)]; 
+   unix(cmd);
+   cmd2 = ['cp ../../../../../software/host/faultify_analysis/dpcp.txt dpcp_part3_' num2str(i) '.txt'];
+   unix(cmd2);
 end

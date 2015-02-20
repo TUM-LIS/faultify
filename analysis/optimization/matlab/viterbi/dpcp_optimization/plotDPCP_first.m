@@ -36,7 +36,13 @@ notReqRegs = [sum(db0) sum(db2) sum(db4) sum(db6) sum(db8) sum(db10) sum(db12) s
     sum(db30) sum(db32) sum(db34) sum(db36) sum(db38) sum(db40)...
     sum(db42) sum(db44) sum(db46) sum(db48) sum(db50) ];
 xx = 0:2:50;
-    plot(xx,notReqRegs)
+plot(xx,notReqRegs)
+
+
+part1_approx = notReqRegs;
+save part1_approx part1_approx
+    
+    
     
     
     

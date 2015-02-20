@@ -1,4 +1,6 @@
 clear all
+db0 = importdata('dpcp_4.txt');
+db2 = importdata('dpcp_4.txt');
 db4 = importdata('dpcp_4.txt');
 db6 = importdata('dpcp_6.txt');
 db8 = importdata('dpcp_8.txt');
@@ -24,12 +26,13 @@ db46 = importdata('dpcp_46.txt');
 db48 = importdata('dpcp_48.txt');
 db50 = importdata('dpcp_50.txt');
 
-notReqRegs = [sum(db4) sum(db8) sum(db10) sum(db12) sum(db14) sum(db16) ...
-        sum(db18) sum(db20) sum(db22) sum(db24) sum(db26) sum(db28) sum(db30) ...
-        sum(db32) sum(db34) sum(db36) sum(db38) sum(db40) sum(db42) sum(db44) ...
-        sum(db46) sum(db48) sum(db50)];
-xx = [4 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50];
-    plot(xx,notReqRegs)
-    
-    
+notReqRegs = [sum(db0) sum(db2) sum(db4) sum(db6) sum(db8) sum(db10) sum(db12) sum(db14) sum(db16) ...
+    sum(db18) sum(db20) sum(db22) sum(db24) sum(db26) sum(db28) sum(db30) ...
+    sum(db32) sum(db34) sum(db36) sum(db38) sum(db40) sum(db42) sum(db44) ...
+    sum(db46) sum(db48) sum(db50)];
+xx = [0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50];
+plot(xx,notReqRegs)
+
+part2_approx = notReqRegs;
+save part2_approx part2_approx
     

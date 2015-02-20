@@ -38,3 +38,7 @@ notReqRegs = [sum(db0) sum(db2) sum(db4) sum(db6) sum(db8) sum(db10) sum(db12) s
 xx = 0:2:50;
     plot(xx,notReqRegs)
     
+    
+part3_approx = notReqRegs;
+save part3_approx part3_approx    
+    
