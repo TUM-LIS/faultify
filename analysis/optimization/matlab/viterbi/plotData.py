@@ -297,12 +297,20 @@ approx = [db0, db2, db4, db6, db8, db10, db12, db14, db16, db18, db20, db22, db2
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import curve_fit
+
+def fitFunc(t, a, b, c):
+    return a*np.exp(-b*t) + c
 
 t = np.arange(0, 52, 2)
 #print t
-
+fitParams, fitCovariances = curve_fit(fitFunc, t, approx)
+print ' fit coefficients:\n', fitParams
+print ' Covariance matrix:\n', fitCovariances
 plt.figure()
 plt.plot(t,approx,'r')
+#plt.errorbar(t,approx,fmt='ro',yerr = 0.2)
+plt.plot(t, fitFunc(t, fitParams[0], fitParams[1], fitParams[2]))
 plt.xlabel('Signal-to-Noise Ratio [dB]')
 plt.ylabel(r'Tolerated sum of $p_e$')
 plt.show()
