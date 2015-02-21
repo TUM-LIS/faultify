@@ -20,16 +20,9 @@ tt_30_sqrt = x_30_sqrt['tt']
 tt_40_sqrt = x_40_sqrt['tt']
 tt_50_sqrt = x_50_sqrt['tt']
 
-print sum(tt_30_div[0])
-print sum(tt_40_div[0])
-print sum(tt_50_div[0])
-print sum(tt_30_mul[0])
-print sum(tt_40_mul[0])
-print sum(tt_50_mul[0])
-print sum(tt_30_sqrt[0])
-print sum(tt_40_sqrt[0])
-print sum(tt_50_sqrt[0])
-
+print sum(tt_30_div[0])+sum(tt_30_mul[0])+sum(tt_30_sqrt[0])
+print sum(tt_40_div[0])+sum(tt_40_mul[0])+sum(tt_40_sqrt[0])
+print sum(tt_50_div[0])+sum(tt_50_mul[0])+sum(tt_50_sqrt[0])
 import matplotlib.pyplot as plt
 import numpy as np
 t_div = np.arange(0, 268, 1)
