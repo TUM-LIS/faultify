@@ -307,14 +307,40 @@ t = np.arange(0, 52, 2)
 fitParams, fitCovariances = curve_fit(fitFunc, t, approx)
 print ' fit coefficients:\n', fitParams
 print ' Covariance matrix:\n', fitCovariances
-plt.figure()
-plt.plot(t,approx,'r')
+
+
+import pylab
+from pylab import arange,pi,sin,cos,sqrt
+
+
+fig_width_pt = 253.04987 # Get this from LaTeX using \showthe\columnwidth
+inches_per_pt = 1.0/72.27               # Convert pt to inches
+golden_mean = (sqrt(5)-1.0)/2.0         # Aesthetic ratio
+fig_width = fig_width_pt*inches_per_pt  # width in inches
+fig_height =fig_width*golden_mean       # height in inches
+fig_size = [fig_width,fig_height]
+params = {'backend': 'ps',
+          'axes.labelsize': 8,
+          'text.fontsize': 8,
+          'legend.fontsize': 8,
+          'xtick.labelsize': 8,
+          'ytick.labelsize': 8,
+          'text.usetex': True,
+          'figure.figsize': fig_size}
+
+pylab.rcParams.update(params)
+
+t = np.arange(0, 52, 2)
+#print t
+pylab.figure(1)
+pylab.clf()
+pylab.axes([0.18,0.17,0.95-0.17,0.95-0.22])
+pylab.plot(t,approx,'b.')
 #plt.errorbar(t,approx,fmt='ro',yerr = 0.2)
-plt.plot(t, fitFunc(t, fitParams[0], fitParams[1], fitParams[2]))
-plt.xlabel('Signal-to-Noise Ratio [dB]')
-plt.ylabel(r'Tolerated sum of $p_e$')
-plt.show()
-
-
+pylab.plot(t, fitFunc(t, fitParams[0], fitParams[1], fitParams[2]),'r-')
+pylab.xlabel('Signal-to-Noise Ratio [dB]')
+pylab.ylabel(r'Tolerated sum of $p_e$')
+pylab.savefig('optimization_viterbi.pdf')
+#pylab.show()
 
 
