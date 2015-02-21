@@ -44,10 +44,10 @@ def zoom_effect01(ax1, ax2, xmin, xmax, **kwargs):
     trans1 = blended_transform_factory(ax1.transData, ax1.transAxes)
     trans2 = blended_transform_factory(ax2.transData, ax2.transAxes)
 
-    bbox = Bbox.from_extents(xmin, 0, xmax, 1)
-
+    bbox = Bbox.from_extents(xmin, 0, xmax, .2)
+    bbox2 = Bbox.from_extents(xmin, 0, xmax, 1)
     mybbox1 = TransformedBbox(bbox, trans1)
-    mybbox2 = TransformedBbox(bbox, trans2)
+    mybbox2 = TransformedBbox(bbox2, trans2)
 
     prop_patches=kwargs.copy()
     prop_patches["ec"]="none"
@@ -172,9 +172,9 @@ pylab.xlabel('Flip-Flop index')
 pylab.ylabel(r'Tolerated $p_e$')
 #pylab.text(250,.3,'QR', fontsize=30,style='italic', fontweight='bold')
 ax2.set_ylim([0, 0.001])
-ax2.set_xlim([10, 180])
+ax2.set_xlim([12, 50])
 
-zoom_effect01(ax1, ax2,10, 160)
+zoom_effect01(ax1, ax2,12, 50)
 #zoom_effect02(ax1, ax2)
 
 
