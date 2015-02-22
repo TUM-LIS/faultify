@@ -1,0 +1,23 @@
+##############################################################################
+## Filename:          /scratch/ne86sud/faultify_axi4/pcores/faultify_axi_wrapper_v1_00_a/data/faultify_axi_wrapper_v2_1_0.pao
+## Description:       Peripheral Analysis Order
+## Date:              Fri May 16 15:25:24 2014 (by Create and Import Peripheral Wizard)
+##############################################################################
+
+lib proc_common_v3_00_a  all 
+lib axi_lite_ipif_v1_01_a  all 
+lib faultify_axi_wrapper_v1_00_a user_logic vhdl
+lib faultify_axi_wrapper_v1_00_a faultify_axi_wrapper vhdl
+lib faultify_axi_wrapper_v1_00_a faultify_top vhdl
+lib faultify_axi_wrapper_v1_00_a faultify_simulator vhdl
+%lib faultify_axi_wrapper_v1_00_a faultify_binomial_gen vhdl
+lib faultify_axi_wrapper_v1_00_a faultify_binomial_gen verilog
+lib faultify_axi_wrapper_v1_00_a lfsr_pkg vhdl
+lib faultify_axi_wrapper_v1_00_a lfsr vhdl
+lib faultify_axi_wrapper_v1_00_a flag_cdc verilog
+lib faultify_axi_wrapper_v1_00_a saed90nm_xilinx verilog
+lib faultify_axi_wrapper_v1_00_a pDFlipFlops verilog
+lib faultify_axi_wrapper_v1_00_a goc verilog
+lib faultify_axi_wrapper_v1_00_a output verilog
+lib faultify_axi_wrapper_v1_00_a goc_wrapper verilog
+lib faultify_axi_wrapper_v1_00_a cut_wrapper verilog
