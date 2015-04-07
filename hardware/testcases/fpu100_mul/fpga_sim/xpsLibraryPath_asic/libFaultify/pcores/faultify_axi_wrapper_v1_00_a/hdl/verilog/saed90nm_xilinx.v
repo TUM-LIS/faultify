@@ -230,6 +230,20 @@ module AOI222X1 (IN1,IN2,IN3,IN4,IN5,IN6,QN);
    NOR3  XIL_NOR3  (.I0(Otemp0),.I1(Otemp1),.I2(Otemp2),.O(QN));
    
 endmodule
+module AOI222X2 (IN1,IN2,IN3,IN4,IN5,IN6,QN);
+ 
+   input IN1,IN2,IN3,IN4,IN5,IN6;
+   output QN;
+   
+   wire   Otemp0,Otemp1,Otemp2;
+
+   AND2 XIL_AND2_0 (.I0(IN1),.I1(IN2),.O(Otemp0));
+   AND2 XIL_AND2_1 (.I0(IN3),.I1(IN4),.O(Otemp1));
+   AND2 XIL_AND2_2 (.I0(IN5),.I1(IN6),.O(Otemp2));
+   
+   NOR3  XIL_NOR3  (.I0(Otemp0),.I1(Otemp1),.I2(Otemp2),.O(QN));
+   
+endmodule
 module AOI21X1 (IN1,IN2,IN3,QN);
  
  input IN1,IN2,IN3;
@@ -266,7 +280,18 @@ module AOI221X1 (IN1,IN2,IN3,IN4,IN5,QN);
  NOR3  XIL_NOR3  (.I0(Otemp0),.I1(IN5),.I2(Otemp1),.O(QN));
 
 endmodule
+module AOI221X2 (IN1,IN2,IN3,IN4,IN5,QN);
 
+ input IN1,IN2,IN3,IN4,IN5;
+ output QN;
+
+ wire Otemp0,Otemp1;
+
+ AND2 XIL_AND2_1 (.I0(IN1),.I1(IN2),.O(Otemp0));
+ AND2 XIL_AND2_2 (.I0(IN3),.I1(IN4),.O(Otemp1));
+ NOR3  XIL_NOR3  (.I0(Otemp0),.I1(IN5),.I2(Otemp1),.O(QN));
+
+endmodule
 /* ------------------------
 	AOBUF
 --------------------------*/

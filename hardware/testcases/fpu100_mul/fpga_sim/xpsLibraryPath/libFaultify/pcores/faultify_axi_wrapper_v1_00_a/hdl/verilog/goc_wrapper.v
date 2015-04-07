@@ -10,12 +10,12 @@ input rst;
 input[69:0] testVector;
 output[40:0] resultVector;
 fpu toplevel_instance (
+.clk_i(clk),
 .opa_i(testVector [31:0]),
 .opb_i(testVector [63:32]),
 .fpu_op_i(testVector [66:64]),
 .rmode_i(testVector [68:67]),
 .output_o(resultVector [31:0]),
-.clk_i(clk),
 .start_i(testVector[69]),
 .ready_o(resultVector[32]),
 .ine_o(resultVector[33]),

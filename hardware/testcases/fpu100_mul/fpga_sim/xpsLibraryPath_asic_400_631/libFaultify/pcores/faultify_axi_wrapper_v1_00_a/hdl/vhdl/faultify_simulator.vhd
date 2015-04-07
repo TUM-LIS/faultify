@@ -54,7 +54,7 @@ architecture behav of faultify_simulator is
       rst             : in  std_logic;
       testvector      : in  std_logic_vector(numIn-1 downto 0);
       resultvector    : out std_logic_vector(numOut-1 downto 0);
-      injectionvector : in  std_logic_vector(631-1 downto 0));
+      injectionvector : in  std_logic_vector(621-1 downto 0));
   end component;
 
   component golden_circuit
@@ -84,7 +84,7 @@ architecture behav of faultify_simulator is
   attribute xc_props of circuit_under_test_inst    : label is "KEEP_HIERARCHY=TRUE";
   attribute xc_props of golden_circuit_inst        : label is "KEEP_HIERARCHY=TRUE";
 
-  signal inj_vec_total : std_logic_vector(631-1 downto 0);
+  signal inj_vec_total : std_logic_vector(621-1 downto 0);
 
 begin  -- behav
 
@@ -120,7 +120,7 @@ begin  -- behav
       injectionvector => inj_vec_total);
 
   inj_vec_total(299 downto 0)     <= (others => '0');
-  inj_vec_total(631-1 downto 300) <= injectionvector_reg;
+  inj_vec_total(621-1 downto 300) <= injectionvector_reg;
 
   golden_circuit_inst : golden_circuit
     port map (

@@ -54,7 +54,7 @@ architecture behav of faultify_simulator is
       rst             : in  std_logic;
       testvector      : in  std_logic_vector(numIn-1 downto 0);
       resultvector    : out std_logic_vector(numOut-1 downto 0);
-      injectionvector : in  std_logic_vector(621-1 downto 0));
+      injectionvector : in  std_logic_vector(numInj-1 downto 0));
   end component;
 
   component golden_circuit
@@ -83,8 +83,6 @@ architecture behav of faultify_simulator is
   attribute xc_props                               : string;
   attribute xc_props of circuit_under_test_inst    : label is "KEEP_HIERARCHY=TRUE";
   attribute xc_props of golden_circuit_inst        : label is "KEEP_HIERARCHY=TRUE";
-
-  signal inj_vec_total : std_logic_vector(621-1 downto 0);
 
 begin  -- behav
 
@@ -117,10 +115,7 @@ begin  -- behav
       rst             => circ_rst,
       testvector      => testvector_reg,
       resultvector    => resultvector_f,
-      injectionvector => inj_vec_total);
-
-  inj_vec_total(299 downto 0)     <= injectionvector_reg;
-  inj_vec_total(621-1 downto 300) <= (others => '0');
+      injectionvector => injectionvector_reg);
 
   golden_circuit_inst : golden_circuit
     port map (
@@ -155,13 +150,13 @@ begin  -- behav
   begin  -- process reg
     if rst_n = '0' then                 -- asynchronous reset (active low)
       injectionvector_reg <= (others => '0');
-    --injectionvector_reg_o <= (others => '0');
-    --test                  <= (others => '0');
+      --injectionvector_reg_o <= (others => '0');
+      --test                  <= (others => '0');
     elsif clk_ce_m'event and clk_ce_m = '1' then  -- rising clock edge
       injectionvector_reg <= injectionvector;
-    --injectionvector_reg <= (others => '0');
-    --test                <= injectionvector_reg_o(31 downto 0);
-    --injectionvector_reg_o(31 downto 0) <= injectionvector_reg_o(31 downto 0) or (resultvector_f(31 downto 0) xor resultvector_o(31 downto 0));
+      --injectionvector_reg <= (others => '0');
+      --test                <= injectionvector_reg_o(31 downto 0);
+      --injectionvector_reg_o(31 downto 0) <= injectionvector_reg_o(31 downto 0) or (resultvector_f(31 downto 0) xor resultvector_o(31 downto 0));
     end if;
   end process reg;
   
