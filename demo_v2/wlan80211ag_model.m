@@ -17,7 +17,7 @@ hViterbiDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Soft', 'SoftInputWord
 modDim = info(hOFDMMod);
 
 
-hAWGN = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)','SNR',10);
+hAWGN = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)','SNR',25);
 
 rng('default')      % Initialize random number generator
 
@@ -42,14 +42,16 @@ nBitsPerFrame = nSymbolsPerFrame*nBitsPerSymbol;
 nFrames =ceil(bitsToTransmitPadEnc/nBitsPerFrame);
 %%
 for i = 1:numBlocks
-     encodedData((i-1)*(BL*2+12)+1:i*(BL*2+12)) = step(hEnc, data( (i-1)*BL+1 : (i-1)*BL+BL ));
+     encodedDataBin((i-1)*(BL*2+12)+1:i*(BL*2+12)) = step(hEnc, data( (i-1)*BL+1 : (i-1)*BL+BL ));
 end
-encodedData = reshape(encodedData,[],2);
+encodedData = reshape(encodedDataBin,[],2);
 encodedData = bin2dec(num2str(encodedData));
 
 % padding for frame
 encodedData(end:nFrames*nSymbolsPerFrame) = 0;
 %%
+receivedDataHard = [];
+receivedDataSoft = [];
 for k = 1:nFrames
     
     % Apply QPSK modulation
@@ -64,11 +66,27 @@ for k = 1:nFrames
     
     % Demodulate OFDM data
     receivedOFDMData = step(hOFDMDemod, receivedSignal);
+    receivedDataSoft = [receivedDataSoft; receivedOFDMData];
     
-    % Demodulate QPSK data
-    receivedData = step(hQDemod, receivedOFDMData);
+    % Demodulate QPSK data HARD
+    receivedDataHard = [receivedDataHard; step(hQDemod, receivedOFDMData)];
     
     % Compute BER
-    errors = step(hError, encodedData((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame), receivedData, 1);
+    errors = step(hError, encodedData((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame), receivedDataHard((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame),1);
     SER(k) = errors(1);
 end
+
+receivedData = receivedDataSoft(1:bitsToTransmitPadEnc/nBitsPerSymbol);
+
+% hard decision atm
+receivedData = [((-1)*imag(receivedData))>0 ;((-1)*real(receivedData))>0];
+
+receivedDataBinStr = reshape(dec2bin(receivedData),1,[]);
+for n = 1:numel(receivedDataBinStr)
+    receivedDataBin(n) = str2double(receivedDataBinStr(n));
+end
+
+
+
+
+
