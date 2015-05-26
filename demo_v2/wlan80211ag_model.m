@@ -1,5 +1,10 @@
 clear all
 
+SNR = [0:1:50];
+
+for s=1:numel(SNR)
+
+
 hQMod = comm.QPSKModulator;
 hQDemod = comm.QPSKDemodulator;
 
@@ -17,7 +22,12 @@ hViterbiDec = comm.ViterbiDecoder(trellis, 'InputFormat', 'Soft', 'SoftInputWord
 modDim = info(hOFDMMod);
 
 
-hAWGN = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)','SNR',25);
+hAWGN = comm.AWGNChannel('NoiseMethod','Signal to noise ratio (SNR)','SNR',SNR(s));
+
+
+hScalQuant = dsp.ScalarQuantizerEncoder;
+hScalQuant.Partitioning = 'Unbounded';
+hScalQuant.BoundaryPoints = (-0.75:0.105:0.75);
 
 rng('default')      % Initialize random number generator
 
@@ -29,7 +39,7 @@ numOFDMFrames = 4;
 
 hError = comm.ErrorRate('ResetInputPort',true);
 
-bitsToTransmit = 1024;
+bitsToTransmit = 1*1024;
 numBlocks = ceil(bitsToTransmit/BL);
 bitsToTransmitPad = numBlocks*BL;
 bitsToTransmitPadEnc = numBlocks*(BL*2+12);
@@ -78,15 +88,36 @@ end
 
 receivedData = receivedDataSoft(1:bitsToTransmitPadEnc/nBitsPerSymbol);
 
-% hard decision atm
-receivedData = [((-1)*imag(receivedData))>0 ;((-1)*real(receivedData))>0];
+% hard decision 
+%receivedData = [((-1)*imag(receivedData))>0 ;((-1)*real(receivedData))>0];
+%receivedDataBinStr = reshape(dec2bin(receivedData),1,[]);
+%for n = 1:numel(receivedDataBinStr)
+%    receivedDataBin(n) = str2double(receivedDataBinStr(n));
+%end
 
-receivedDataBinStr = reshape(dec2bin(receivedData),1,[]);
-for n = 1:numel(receivedDataBinStr)
-    receivedDataBin(n) = str2double(receivedDataBinStr(n));
+
+% soft quantize
+receivedData = [((-1)*imag(receivedData)) ;((-1)*real(receivedData))];
+receivedDataQuant = step(hScalQuant, receivedData);
+% decode in MATLAB
+for i = 1:numBlocks
+decoded = step(hViterbiDec,double(receivedDataQuant((i-1)*(BL*2+12)+1:i*(BL*2+12))));
+decoded(BL+1:end) = [];
+receivedDataDecoded((i-1)*BL+1 : (i-1)*BL+BL ) = decoded;
+end
+% decode on FPGA
+receivedDataQuantCreonix = ((-1*receivedDataQuant(3))+7);
+
+
+
+%disp('uncoded')
+uncodedSER(s) = mean(SER);
+%disp('coded')
+codedSER(s) = sum(abs(data-receivedDataDecoded')>0)/bitsToTransmitPad;
+
 end
 
 
-
+plot(SNR, codedSER,SNR,uncodedSER)
 
 
