@@ -1,6 +1,6 @@
 clear all
 
-SNR = [0:1:50];
+SNR = [50];
 
 for s=1:numel(SNR)
 
@@ -39,7 +39,7 @@ numOFDMFrames = 4;
 
 hError = comm.ErrorRate('ResetInputPort',true);
 
-bitsToTransmit = 1*1024;
+bitsToTransmit = 100*1024;
 numBlocks = ceil(bitsToTransmit/BL);
 bitsToTransmitPad = numBlocks*BL;
 bitsToTransmitPadEnc = numBlocks*(BL*2+12);
@@ -106,8 +106,19 @@ decoded(BL+1:end) = [];
 receivedDataDecoded((i-1)*BL+1 : (i-1)*BL+BL ) = decoded;
 end
 % decode on FPGA
-receivedDataQuantCreonix = ((-1*receivedDataQuant(3))+7);
+receivedDataQuantCreonix = ((-1*receivedDataQuant)+7);
 
+llr_fh = fopen('llr.txt','w+');
+for i = 1:numBlocks
+    act_bl = int16(receivedDataQuantCreonix((i-1)*(BL*2+12)+1:i*(BL*2+12)));
+    for l=1:412
+        fprintf(llr_fh,'%d\n',act_bl(l));
+    end
+end
+fclose(llr_fh);
+cmd = ['../software/host/faultify_viterbi/faultify_viterbi_bl_200 ' num2str(numBlocks)];
+[a b] = unix(cmd);
+receivedDataCreonixDecoded = (importdata('result.txt')>0);
 
 
 %disp('uncoded')
@@ -115,9 +126,13 @@ uncodedSER(s) = mean(SER);
 %disp('coded')
 codedSER(s) = sum(abs(data-receivedDataDecoded')>0)/bitsToTransmitPad;
 
+receivedDataCreonixDecoded(200:200:end) = receivedDataDecoded(200:200:end);
+codedSERHW(s) = sum(abs(data-receivedDataCreonixDecoded)>0)/bitsToTransmitPad;
+
+
 end
 
 
-plot(SNR, codedSER,SNR,uncodedSER)
+plot(SNR, codedSER,SNR,uncodedSER,SNR,codedSERHW)
 
 
