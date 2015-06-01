@@ -1,5 +1,5 @@
 clear all
-
+loadlibrary('libbitmanipulation.so','bitmanipulation.h')
 SNR = [50];
 
 for s=1:numel(SNR)
@@ -54,8 +54,12 @@ nFrames =ceil(bitsToTransmitPadEnc/nBitsPerFrame);
 for i = 1:numBlocks
      encodedDataBin((i-1)*(BL*2+12)+1:i*(BL*2+12)) = step(hEnc, data( (i-1)*BL+1 : (i-1)*BL+BL ));
 end
-encodedData = reshape(encodedDataBin,[],2);
-encodedData = bin2dec(num2str(encodedData));
+encodedData_t = reshape(encodedDataBin,[],2);
+%encodedData = bin2dec(num2str(encodedData_t));
+
+t = zeros(6,size(encodedData_t,1));
+tt = reshape([t' encodedData_t]',[],1);
+encodedData = double(bin2dec_clib(tt));
 
 % padding for frame
 encodedData(end:nFrames*nSymbolsPerFrame) = 0;
@@ -108,13 +112,12 @@ end
 % decode on FPGA
 receivedDataQuantCreonix = ((-1*receivedDataQuant)+7);
 
-llr_fh = fopen('llr.txt','w+');
-for i = 1:numBlocks
-    act_bl = int16(receivedDataQuantCreonix((i-1)*(BL*2+12)+1:i*(BL*2+12)));
-    for l=1:412
-        fprintf(llr_fh,'%d\n',act_bl(l));
-    end
+llr_fh = fopen('llr.txt','W');
+act_bl = int16(receivedDataQuantCreonix);
+for i = 1:numBlocks*412
+    fprintf(llr_fh,'%d\n',act_bl(i)); 
 end
+
 fclose(llr_fh);
 cmd = ['../software/host/faultify_viterbi/faultify_viterbi_bl_200 ' num2str(numBlocks)];
 [a b] = unix(cmd);
