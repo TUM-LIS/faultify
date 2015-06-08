@@ -1,9 +1,13 @@
 clear all
 loadlibrary('libbitmanipulation.so','bitmanipulation.h')
-SNR = [50];
+pic = imread('me.png');
+pic_lin = pic(:);
+
+SNR = [20];
 
 for s=1:numel(SNR)
 
+tic 
 
 hQMod = comm.QPSKModulator;
 hQDemod = comm.QPSKDemodulator;
@@ -39,12 +43,18 @@ numOFDMFrames = 4;
 
 hError = comm.ErrorRate('ResetInputPort',true);
 
-bitsToTransmit = 100*1024;
+%bitsToTransmit = 10*1024;
+bitsToTransmit = numel(pic_lin)*8;
+
 numBlocks = ceil(bitsToTransmit/BL);
 bitsToTransmitPad = numBlocks*BL;
 bitsToTransmitPadEnc = numBlocks*(BL*2+12);
 
-data = randi([0 1], bitsToTransmit, 1);
+%data = randi([0 1], bitsToTransmit, 1);
+data = pic_lin;
+data = double(dec2bin_clib(data)');
+
+
 data(bitsToTransmit:bitsToTransmitPad) = 0;
 
 
@@ -59,7 +69,7 @@ encodedData_t = reshape(encodedDataBin,[],2);
 
 t = zeros(6,size(encodedData_t,1));
 tt = reshape([t' encodedData_t]',[],1);
-encodedData = double(bin2dec_clib(tt));
+encodedData = double(bin2dec_clib(tt)');
 
 % padding for frame
 encodedData(end:nFrames*nSymbolsPerFrame) = 0;
@@ -80,16 +90,17 @@ for k = 1:nFrames
     
     % Demodulate OFDM data
     receivedOFDMData = step(hOFDMDemod, receivedSignal);
-    receivedDataSoft = [receivedDataSoft; receivedOFDMData];
-    
+    receivedDataSoft((k-1)*53+1:k*53) = receivedOFDMData;
+    %receivedDataSoft = [receivedDataSoft; receivedOFDMData];
     % Demodulate QPSK data HARD
-    receivedDataHard = [receivedDataHard; step(hQDemod, receivedOFDMData)];
-    
+    tmp = step(hQDemod, receivedOFDMData);
+    receivedDataHard((k-1)*53+1:k*53) = tmp;
+
     % Compute BER
-    errors = step(hError, encodedData((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame), receivedDataHard((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame),1);
+    errors = step(hError, encodedData((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame), receivedDataHard((k-1)*nSymbolsPerFrame+1:k*nSymbolsPerFrame)',1);
     SER(k) = errors(1);
 end
-
+    receivedDataSoft = conj(receivedDataSoft');
 receivedData = receivedDataSoft(1:bitsToTransmitPadEnc/nBitsPerSymbol);
 
 % hard decision 
@@ -112,13 +123,18 @@ end
 % decode on FPGA
 receivedDataQuantCreonix = ((-1*receivedDataQuant)+7);
 
-llr_fh = fopen('llr.txt','W');
+%llr_fh = fopen('llr.txt','W');
 act_bl = int16(receivedDataQuantCreonix);
-for i = 1:numBlocks*412
-    fprintf(llr_fh,'%d\n',act_bl(i)); 
-end
+%for i = 1:numBlocks*412
+%    fprintf(llr_fh,'%d\n',act_bl(i)); 
+%end
+%fclose(llr_fh);
 
-fclose(llr_fh);
+llr_bin_fh = fopen('llr.bin','W');
+fwrite(llr_bin_fh,act_bl,'int32');
+fclose(llr_bin_fh);
+
+
 cmd = ['../software/host/faultify_viterbi/faultify_viterbi_bl_200 ' num2str(numBlocks)];
 [a b] = unix(cmd);
 receivedDataCreonixDecoded = (importdata('result.txt')>0);
@@ -132,10 +148,16 @@ codedSER(s) = sum(abs(data-receivedDataDecoded')>0)/bitsToTransmitPad;
 receivedDataCreonixDecoded(200:200:end) = receivedDataDecoded(200:200:end);
 codedSERHW(s) = sum(abs(data-receivedDataCreonixDecoded)>0)/bitsToTransmitPad;
 
+toc
 
 end
 
 
-plot(SNR, codedSER,SNR,uncodedSER,SNR,codedSERHW)
+% restore image
+receivedDataCreonixDecoded(bitsToTransmit:bitsToTransmitPad) = [];
+imageRe = bin2dec_clib(receivedDataCreonixDecoded);
+imageRe = reshape(imageRe',[344 360 3]);
+imshow(imageRe)
 
+%plot(SNR, codedSER,SNR,uncodedSER,SNR,codedSERHW)
 
