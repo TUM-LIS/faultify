@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
   gettimeofday(&tval_before, NULL);
   
 
-  int32_t llr_f[412];
+  int32_t llr_f[412*10];
 
   /* Main loop */
   uint8_t decoded[200];
@@ -100,14 +100,14 @@ int main(int argc, char *argv[]) {
     //for (i=0;i<412;i++) {
     //  fscanf(fh,"%i",&llr_f[i]);
     //}
-    fread(&llr_f[0],4,412,fh);
+    fread(&llr_f[0],4,412*10,fh);
     /* read decoded data */
-    faultify_comm_viterbi_decode(ftx,&llr_f[0],412,&decoded[0]);
+    faultify_comm_load_llr(ftx,&llr_f[0],412*10);
     
     /* write out result */
-    for (i=0;i<200;i++) {
-      fprintf(fh_out,"%u\n",decoded[i]);
-    }
+    //for (i=0;i<200;i++) {
+    //  fprintf(fh_out,"%u\n",decoded[i]);
+    //}
     
   }
   
@@ -129,7 +129,7 @@ int main(int argc, char *argv[]) {
 
   
   printf("Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
-  printf("average decoded kbits/s: %f\n",(double)(412)/tval_result.tv_sec/1024);
+  printf("average decoded kbits/s: %f\n",(double)(412*numblk*10)/tval_result.tv_sec/1024);
   
   
   fclose(fh);
