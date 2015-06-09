@@ -40,13 +40,17 @@ double * pe;
 #define MAGIC_NR_HIGH 0x74696679
 
 
+uint8_t *llr_buffer;
+
 enum commands {cmd_identify=1,
 	       cmd_configure=2,
                cmd_run=3,
                cmd_start_free_run=4,
                cmd_stop_free_run=5,
                cmd_user_data_type_1=6,
-	       cmd_speed_test=7};
+	       cmd_speed_test=7,
+	       cmd_store_llr=8,
+	       cmd_decode_llr=9};
 
 int packet_parser(int sd,unsigned char * data,int len);
 int comm_identify(int sd,unsigned char * data,int len);
@@ -56,6 +60,8 @@ int comm_start_free_run(int sd,unsigned char * data,int len);
 int comm_stop_free_run(int sd,unsigned char * data,int len);
 int comm_viterbi_decode(int sd,unsigned char * data,int len);
 int comm_speed_test(int sd,unsigned char * data,int len);
+int comm_store_llr(int sd,unsigned char * data,int len);
+int comm_decode_llr(int sd,unsigned char * data,int len);
 
 
 
