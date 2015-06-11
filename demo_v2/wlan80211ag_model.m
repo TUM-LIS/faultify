@@ -3,11 +3,25 @@ loadlibrary('libbitmanipulation.so','bitmanipulation.h')
 pic = imread('me.png');
 pic_lin = pic(:);
 
-SNR = [20];
+SNR = 10:2:22;
 
+
+
+%%
 for s=1:numel(SNR)
 
 tic 
+
+%%
+strr= ['../analysis/optimization/matlab/viterbi/manualOpt_fine_part1_snr' num2str(SNR(s)) '.mat'];
+load(strr);
+prob_fh = fopen('probs.txt','W');
+for p=1:numel(tt)
+   %fprintf(prob_fh,'%f\n',tt(p)); 
+   fprintf(prob_fh,'0.0\n'); 
+end
+fclose(prob_fh);
+
 
 hQMod = comm.QPSKModulator;
 hQDemod = comm.QPSKDemodulator;
@@ -49,6 +63,7 @@ bitsToTransmit = numel(pic_lin)*8;
 numBlocks = ceil(bitsToTransmit/BL);
 bitsToTransmitPad = numBlocks*BL;
 bitsToTransmitPadEnc = numBlocks*(BL*2+12);
+
 
 %data = randi([0 1], bitsToTransmit, 1);
 data = pic_lin;
@@ -148,16 +163,28 @@ codedSER(s) = sum(abs(data-receivedDataDecoded')>0)/bitsToTransmitPad;
 receivedDataCreonixDecoded(200:200:end) = receivedDataDecoded(200:200:end);
 codedSERHW(s) = sum(abs(data-receivedDataCreonixDecoded)>0)/bitsToTransmitPad;
 
-toc
-
-end
-
 
 % restore image
 receivedDataCreonixDecoded(bitsToTransmit:bitsToTransmitPad) = [];
 imageRe = bin2dec_clib(receivedDataCreonixDecoded);
 imageRe = reshape(imageRe',[344 360 3]);
-imshow(imageRe)
 
+images{s} = imageRe;
+
+toc
+
+end
+
+%%
+figure
+for n=1:15
+   subplot(3,5,n);
+   imshow(images{n});
+end
+
+%imshow(imageRe)
 %plot(SNR, codedSER,SNR,uncodedSER,SNR,codedSERHW)
+
+
+
 
