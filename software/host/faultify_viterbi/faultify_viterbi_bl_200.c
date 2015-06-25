@@ -45,9 +45,17 @@ int main(int argc, char *argv[]) {
   int i;
   for (i=0;i<ftx->numInj;i++)
     pe[i] = 0.00f;
+
+  FILE *fh_prob;
+  fh_prob = fopen("probs.txt","r");
+  
+  for (i=0;i<ftx->numInj;i++) {
+    fscanf(fh_prob,"%lf",&pe[i]);
+  }
+  fclose(fh_prob);
   uint32_t result[ftx->numOut];
-
-
+  
+  
   FILE *fh;
   fh = fopen("llr.bin","r");
   if (fh==NULL) {
@@ -87,6 +95,8 @@ int main(int argc, char *argv[]) {
 
   FILE *fh_out;
   fh_out = fopen("result.txt","w+");
+  
+
   
   
   int k;
