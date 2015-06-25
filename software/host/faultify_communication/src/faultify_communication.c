@@ -286,10 +286,82 @@ int8_t faultify_comm_speed_test(struct faultify_handle *ftx,uint32_t numData) {
 
 }
 
+int8_t faultify_comm_load_llr(struct faultify_handle *ftx,int32_t *llr,uint32_t len) {
+
+  uint8_t send_buffer[16+len];
+  bzero(send_buffer,16);
+  uint8_t recv_buffer[16];
+  bzero(recv_buffer,16);
+  
+  //  magic number
+  faultify_packet_set_magic_number(send_buffer);
+  // type
+  faultify_packet_set_packet_type(send_buffer,cmd_store_llr);
+  // req/answ
+  send_buffer[10] = 0x01;
+  // last 
+  send_buffer[11] = 0x01;
+  // length
+  faultify_packet_set_packet_length(send_buffer,len);
+
+  int ii;
+  for (ii=0;ii<len;ii++) {
+    memcpy(&send_buffer[16+ii],&llr[ii],sizeof(uint8_t));
+  } 
+  int r;
+  
+  int pkg=0,idx=0;
+  for (pkg=0;pkg<((16+len)/1024);pkg++) {
+    r = write(ftx->sockfd,&send_buffer[pkg*1024],1024);
+    if (r<0) {
+      return 1;
+    } else {
+      idx +=1024;
+    }
+    usleep(500);
+  }
+  //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
+  r = write(ftx->sockfd,&send_buffer[idx],(16+len)-(pkg*1024));
+  if (r<0) {
+    return 1;
+  }
+  
+
+  r = read(ftx->sockfd,recv_buffer,16);
+  if (r < 0) 
+    printf("ERROR reading from socket");
+  
+
+
+  r = faultify_packet_check_sequence(recv_buffer);
+  if (r) {
+    printf("ERROR wrong magic number\n");
+  }
+  
+  if (cmd_store_llr != faultify_packet_check_cmd_type(recv_buffer)) {
+    printf("ERROR wrong command response\n");
+  }
+  
+  if  (recv_buffer[10]) {
+    printf("ERROR not a response\n");
+  }
+  
+  if (faultify_packet_check_length(recv_buffer)!= 0) {
+    printf("resp len: %u\n",faultify_packet_check_length(recv_buffer));
+    printf("expected: %u\n",0);
+    printf("ERROR wrong response length\n");
+    exit(1);
+  }
+
+  
+  return 0;
+
+}
+
 
 
 int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, uint32_t len, uint8_t *decoded) {
- uint8_t send_buffer[16+len];
+  uint8_t send_buffer[16+len];
   bzero(send_buffer,16);
   uint8_t recv_buffer[16+(len/4-6)];
   bzero(recv_buffer,16);
@@ -310,7 +382,7 @@ int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, ui
   } 
  int r;
 
-#if 0
+#if 1
   r = write(ftx->sockfd,&send_buffer[0],(16+len));
   if (r<0) {
     return 1;
@@ -325,7 +397,8 @@ int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr, ui
     } else {
       idx +=1024;
     }
-    usleep(100000);
+    //usleep(100000);
+    usleep(500);
   }
   //printf("now: %u\n",(16+sizeof(double)*len)-(pkg*1024));
   r = write(ftx->sockfd,&send_buffer[idx],(16+len)-(pkg*1024));
