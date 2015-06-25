@@ -26,8 +26,9 @@ enum commands {cmd_identify=1,
 	       cmd_start_free_run=4,
                cmd_stop_free_run=5,
                cmd_user_data_type_1=6,
-	       cmd_speed_test=7
-};
+	       cmd_speed_test=7,
+	       cmd_store_llr=8,
+	       cmd_decode_llr=9};
 
 struct faultify_handle {
   int portno;
@@ -57,6 +58,7 @@ int8_t faultify_comm_start_free_run(struct faultify_handle *ftx);
 int8_t faultify_comm_stop_free_run(struct faultify_handle *ftx,uint32_t * cycles,uint32_t * numErrors);
 int8_t faultify_comm_viterbi_decode(struct faultify_handle *ftx,int32_t *llr,uint32_t len,uint8_t *decoded);
 int8_t faultify_comm_speed_test(struct faultify_handle *ftx,uint32_t numData);
+int8_t faultify_comm_load_llr(struct faultify_handle *ftx,int32_t *llr,uint32_t len);
 
 
 
