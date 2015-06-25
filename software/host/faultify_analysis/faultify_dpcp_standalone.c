@@ -8,7 +8,9 @@
 #define b14 0
 #define fpu100_add 0
 #define fpu100_div 0
-#define fpu100_mul 1
+#define fpu100_div_asic 1
+#define fpu100_mul_asic 0
+#define fpu100_mul 0
 #define fpu100_sqrt 0
 
 #define qr 0
@@ -19,13 +21,22 @@
 #define numIn 70
 #define numOut 41
 #endif
-
+#if fpu100_div_asic
+#define numInj 442
+#define numIn 70
+#define numOut 41
+#endif
 #if fpu100_mul
 #define numInj 142
 #define numIn 70
 #define numOut 41
 #endif
-
+//631 total
+#if fpu100_mul_asic
+#define numInj 331
+#define numIn 70
+#define numOut 41
+#endif
 #if fpu100_sqrt
 #define numInj 302
 #define numIn 70
@@ -107,8 +118,8 @@ int main (void) {
   for(out=20;out<52;out++) /*b14*/
     fsc.max_output_error_probability[out] = 0.5f;
 #endif
-#if (fpu100_sum || fpu100_div || fpu100_mul || fpu100_sqrt) 
-  for(out=9;out<31;out++) /*fpu100*/
+#if (fpu100_sum || fpu100_div || fpu100_mul || fpu100_sqrt || fpu100_div_asic || fpu100_mul_asic) 
+  for(out=0;out<31;out++) /*fpu100*/
     fsc.max_output_error_probability[out] = 0.5f;
   for(out=33;out<40;out++) /*fpu100*/
     fsc.max_output_error_probability[out] = 0.5f;
@@ -122,7 +133,7 @@ int main (void) {
     fsc.max_output_error_probability[2] = 0.5f;
 #endif
 
-    fsc.simCycles = 10000000;
+    fsc.simCycles = 1000000;
     
     faultify_simulation_create_probability_relation_matrix(fsc.simCycles);
     
