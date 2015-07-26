@@ -1,9 +1,9 @@
 clear all
 loadlibrary('libbitmanipulation.so','bitmanipulation.h')
-pic = imread('me.png');
+pic = imread('rome.png');
 pic_lin = pic(:);
 
-SNR = 10:2:22;
+SNR = 16:2:26;
 
 
 
@@ -13,8 +13,11 @@ for s=1:numel(SNR)
 tic 
 
 %%
-strr= ['../analysis/optimization/matlab/viterbi/manualOpt_fine_part1_snr' num2str(SNR(s)) '.mat'];
+strr= ['../analysis/optimization/matlab/viterbi/manualOpt_fine_part1_new_snr' num2str(SNR(s)) '.mat'];
+%strr= ['../analysis/optimization/matlab/viterbi/manualOpt_part3_snr0.mat'];
 load(strr);
+%tt = ttc;
+
 prob_fh = fopen('probs.txt','W');
 for p=1:numel(tt)
    %fprintf(prob_fh,'%f\n',tt(p)); 
@@ -149,6 +152,10 @@ llr_bin_fh = fopen('llr.bin','W');
 fwrite(llr_bin_fh,act_bl,'int32');
 fclose(llr_bin_fh);
 
+%llr_bin_fh_gen = fopen(['llr_snr' num2str(SNR(s)) '.bin'],'W');
+%fwrite(llr_bin_fh_gen,act_bl,'int32');
+%fclose(llr_bin_fh_gen);
+
 
 cmd = ['../software/host/faultify_viterbi/faultify_viterbi_bl_200 ' num2str(numBlocks)];
 [a b] = unix(cmd);
@@ -167,7 +174,7 @@ codedSERHW(s) = sum(abs(data-receivedDataCreonixDecoded)>0)/bitsToTransmitPad;
 % restore image
 receivedDataCreonixDecoded(bitsToTransmit:bitsToTransmitPad) = [];
 imageRe = bin2dec_clib(receivedDataCreonixDecoded);
-imageRe = reshape(imageRe',[344 360 3]);
+imageRe = reshape(imageRe',size(pic));
 
 images{s} = imageRe;
 
