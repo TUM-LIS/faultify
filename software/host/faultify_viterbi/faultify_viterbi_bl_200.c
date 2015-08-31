@@ -136,8 +136,13 @@ int main(int argc, char *argv[]) {
     printf("%u\n",result[i]);
   }
   */
+  FILE *res_fh;
+  res_fh = fopen("faults.txt","w+");
+  for (i=0;i<ftx->numOut;i++) {
+    fprintf(res_fh,"%u\n",result[i]);
+  }
+  fclose(res_fh);
 
-  
   printf("Time elapsed: %ld.%06ld\n", (long int)tval_result.tv_sec, (long int)tval_result.tv_usec);
   printf("average decoded kbits/s: %f\n",(double)(412)/tval_result.tv_sec/1024);
   

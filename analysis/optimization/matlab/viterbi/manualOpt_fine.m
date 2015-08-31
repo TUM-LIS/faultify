@@ -1,15 +1,15 @@
-for snr=50:-2:0
+for snr=16:2:26
 
     
     % result from coarse opt.
-    load manualOpt_part3_snr0.mat
-
+    %load manualOpt_part3_snr0.mat
+    load manualOpt_part1_snr_newTestCircuitApp10.mat
     % dpcp result 
-    dpcp = ones(1,179);
+    dpcp = ones(1,200);
     %dpcp = csvread('dpcp_optimization/dpcp_part1_50.txt');
     d =dpcp;
     
-    numInj = 179;
+    numInj = 200;
     numOut = 5;
     
     
@@ -38,7 +38,7 @@ for snr=50:-2:0
             for i=1:numel(ind)
                 tt(ind(i)) = tt(ind(i)) + 0.001;
                 sum(tt)
-                r = test_circuit(tt,maxVec,snr);
+                r = test_circuit_2(tt,maxVec,snr);
                 r(r>.5) = .5;
                 notInConst = (sum((r-maxVec)>0)>0);
                 if (notInConst)
@@ -52,7 +52,7 @@ for snr=50:-2:0
 
 
     %%
-    fileStr = ['manualOpt_fine_part3_snr' num2str(snr) '.mat'];
+    fileStr = ['manualOpt_fine_part1_new_snr' num2str(snr) '.mat'];
     save(fileStr,'tt');
     
 end

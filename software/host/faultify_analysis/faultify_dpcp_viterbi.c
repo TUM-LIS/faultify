@@ -9,8 +9,8 @@
 #define viterbi 1
 
 #if viterbi
-//#define numInj 200
-#define numInj 178
+#define numInj 200
+//#define numInj 178
 #define numIn 69
 #define numOut 5
 #endif

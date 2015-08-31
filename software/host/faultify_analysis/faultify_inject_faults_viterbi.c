@@ -66,7 +66,7 @@ int main (int argc,char *argv[]) {
   
   int32_t llr_f[412];
   /* Main loop */
-#define NUM_BLK  10
+#define NUM_BLK  100
   int blk;
   uint8_t decoded[200];
   for (blk = 0;blk<NUM_BLK;blk++) {

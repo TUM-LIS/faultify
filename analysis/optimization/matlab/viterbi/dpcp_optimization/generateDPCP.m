@@ -1,5 +1,5 @@
 
-for i=0
+for i=0:2:50
     i
    cmd = ['cd ../../../../../software/host/faultify_analysis/;./faultify_dpcp_viterbi ' num2str(i)]; 
    unix(cmd);

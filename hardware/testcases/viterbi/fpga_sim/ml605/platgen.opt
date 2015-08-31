@@ -5,7 +5,7 @@ vhdl
 -intstyle
 default
 -lp
-/home/david/projects/faultify_github/faultify/hardware/testcases/viterbi/fpga_sim/xpsLibraryPath_viterbi/
+../xpsLibraryPath_viterbi/
 -msg
 __xps/ise/xmsgprops.lst
 system.mhs

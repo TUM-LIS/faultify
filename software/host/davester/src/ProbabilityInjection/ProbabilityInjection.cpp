@@ -25,11 +25,13 @@ void ProbabilityInjection::execute(IR* ir,string toplevel,vector<string> element
     for (vector<Module*>::iterator it = mod.begin(); it != mod.end(); ++it) {
 	// dgb
       //cout << (*it)->getName() << ":" << (*it)->getName().compare("acsZ0_") << endl;
-      //if ((*it)->getName().compare("acsZ0_") < 3 ) 
-//	{
-	 // cout << "got module..." << endl;
-	// dbg
-      vector<Instantiation*> inst = (*it)->getInstantiations();
+      /*if ((*it)->getName().compare("serial_div") == 0 ||
+	  (*it)->getName().compare("pre_norm_div") == 0 ||
+	  (*it)->getName().compare("post_norm_div") == 0) 
+	  {*/
+	  // cout << "got module..." << endl;
+	  // dbg
+	  vector<Instantiation*> inst = (*it)->getInstantiations();
       vector<string> errorNets;
       for (vector<Instantiation*>::iterator iit=inst.begin(); iit!= inst.end(); ++iit) {
 	/* replace instance */

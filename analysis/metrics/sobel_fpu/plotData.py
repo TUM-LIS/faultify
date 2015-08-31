@@ -57,7 +57,7 @@ ax1.set_ylim([0, .6])
 ax1.set_xlim([0, 31])
 
 plt.text(2,.3,'fdiv', fontsize=9,style='italic', fontweight='bold')
-plt.annotate('sign bit',xy=(30,0.1),xytext=(22,.3),arrowprops=dict(arrowstyle="->"))
+plt.annotate('sign bit',fontsize=9,xy=(30,0.1),xytext=(22,.3),arrowprops=dict(arrowstyle="->"))
 plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=3, mode="expand", borderaxespad=0.)
 

@@ -1,12 +1,15 @@
 
 source ../setup_asic_lib.tcl
 read_file -format vhdl {../b14.vhd}
-create_clock -name "clk" -period 50 -waveform { 0 25  }  { clk  }
+create_clock -name "clk" -period 10 -waveform { 0 5  }  { clock }
 compile -exact_map
 
 
-report_timing -path full -delay max -nworst 1000000 -input_pins -max_paths 100000 -significant_digits 5 -nosplit -sort_by group -capacitance  -transition_time -unique_pins > full_report.txt
+report_timing -path full -delay max -nworst 1 -input_pins -max_paths 100000 -significant_digits 5 -nosplit -sort_by group -unique_pins -nets > full_report.txt
 
+
+
+#report_net [get_nets -hierarchical] > all_fanout.txt
 
 foreach_in_collection register [all_registers] {
 	puts "Generating fanin/fanout report for: [get_object_name $register]"
