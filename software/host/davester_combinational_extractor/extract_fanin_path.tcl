@@ -45,6 +45,7 @@ foreach_in_collection register [all_registers] {
 	}
 
 	set index 1
+	set totalindex 1
 	set alternating 0
 
 	foreach_in_collection point  [get_attribute [get_timing_paths -to [get_object_name $register]/D ] points] {
@@ -74,6 +75,7 @@ foreach_in_collection register [all_registers] {
 			lassign $fields gatename inputpinname
 			set gatetype [get_attribute [get_cells $gatename] ref_name]
 			set outputnetname [get_object_name [get_nets -of_objects [get_attribute $point object]]]
+
 			#set capacitance [get_attribute [get_nets -of_objects [get_attribute $point object]] actual_max_net_capacitance]
 			#puts -nonewline $_file "$gatename," 
 			#puts -nonewline $_file "$inputpinname,"
@@ -84,6 +86,8 @@ foreach_in_collection register [all_registers] {
 				set fields [split [get_object_name [get_attribute $point object]] "/"]
 				lassign $fields nextgatename outputpinname
 				set capacitance [get_attribute [get_nets -of_objects [get_attribute $point object]] actual_max_net_capacitance]
+				set fields2 [split [get_object_name [get_nets -of_objects [get_attribute $point object]]] "/"]
+				lassign $fields2 unused netname
 				#puts -nonewline $_file "input pinname $inputpinname,"
 				if {[string equal -length 6 $gatetype "DFFARX"]} {
 					if {[string equal $outputpinname "Q"]} {
@@ -236,11 +240,11 @@ foreach_in_collection register [all_registers] {
 					}
 				} elseif {[string equal -length 5 $gatetype "AND3X"]} {
 					if {[string equal $inputpinname "IN1"]} {
-						puts $_file "x$gatename wire[expr {$index-1}] udd udd udd wire$index udd uss $gatetype"
+						puts $_file "x$gatename wire[expr {$index-1}] udd udd wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN2"]} {
-						puts $_file "x$gatename udd wire[expr {$index-1}] udd udd wire$index udd uss $gatetype"
+						puts $_file "x$gatename udd wire[expr {$index-1}] udd wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN3"]} {
-						puts $_file "x$gatename udd udd wire[expr {$index-1}] udd wire$index udd uss $gatetype"
+						puts $_file "x$gatename udd udd wire[expr {$index-1}] wire$index udd uss $gatetype"
 					}
 				} elseif {[string equal -length 5 $gatetype "AND4X"]} {
 					if {[string equal $inputpinname "IN1"]} {
@@ -256,25 +260,26 @@ foreach_in_collection register [all_registers] {
 					if {[string equal $inputpinname "IN1"]} {
 						puts $_file "x$gatename wire[expr {$index-1}] udd wire$index 0 udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN2"]} {
-						puts $_file "x$gatename udd wire[expr {$index-1}] wire$index 1 udd uss $gatetype"
+						puts $_file "x$gatename udd wire[expr {$index-1}] wire$index udd udd uss $gatetype"
 					} 
 				} elseif {[string equal -length 6 $gatetype "MUX41X"]} {
 					if {[string equal $inputpinname "IN1"]} {
-						puts $_file "x$gatename wire[expr {$index-1}] udd udd udd wire$index 0 0 udd uss $gatetype"
+						puts $_file "x$gatename wire[expr {$index-1}] udd udd udd wire$index uss uss udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN2"]} {
-						puts $_file "x$gatename udd wire[expr {$index-1}] udd udd wire$index 0 1 udd uss $gatetype"
+						puts $_file "x$gatename udd wire[expr {$index-1}] udd udd wire$index uss udd udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN3"]} {
-						puts $_file "x$gatename udd udd wire[expr {$index-1}] udd wire$index 1 0 udd uss $gatetype"
+						puts $_file "x$gatename udd udd wire[expr {$index-1}] udd wire$index udd uss udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN4"]} {
-						puts $_file "x$gatename udd udd udd wire[expr {$index-1}] wire$index 1 1 udd uss $gatetype"
+						puts $_file "x$gatename udd udd udd wire[expr {$index-1}] wire$index udd udd udd uss $gatetype"
 					}
 				} elseif {[string equal -length 8 $gatetype "b14_DW01"]} {
 					incr index -1
 				} else {
 					puts "ERROR: Unknown Gate $gatetype"
 				}
-				puts $_file "c$gatename wire$index 0 [expr {$capacitance/100}]pF"
+				puts $_file "c$totalindex wire$index 0 [expr {$capacitance/100}]pF"
 				incr index
+				incr totalindex
 			}
 			set alternating [expr {!$alternating}]
 
@@ -294,6 +299,7 @@ foreach_in_collection register [all_registers] {
 	puts $_file "set filetype=ascii"
 	puts $_file "run"
 	puts $_file "meas TRAN prop_delay TRIG clk val=0.6 cross=1 TARG wire[expr {$index-1}] val=0.6 cross=1"
+	puts $_file "quit"
 	puts $_file ".endc"
 	puts $_file ".end"
 
