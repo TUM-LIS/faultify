@@ -1,7 +1,7 @@
 
 source ../setup_asic_lib.tcl
 read_file -format vhdl {../b14.vhd}
-create_clock -name "clk" -period 10 -waveform { 0 5  }  { clock }
+create_clock -name "clk" -period 20 -waveform { 0 10  }  { clock }
 compile -exact_map
 
 

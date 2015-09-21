@@ -8,7 +8,16 @@ proc count_elements {l} {
 }
 
 
+set _slackfile [open slack.csv w]
 
+foreach_in_collection register [all_registers] {
+
+puts -nonewline $_slackfile "[get_object_name $register],"
+puts -nonewline $_slackfile "[get_attribute [get_timing_paths -to [get_object_name $register]/D ] slack],"
+puts 		$_slackfile "[get_attribute [get_timing_paths -to [get_object_name $register]/D ] endpoint_setup_time_value]"
+
+}
+close $_slackfile
 
 foreach_in_collection register [all_registers] {
 	
@@ -23,7 +32,7 @@ foreach_in_collection register [all_registers] {
 
 	if {$spice_csv == 1} {
 	## SPICE title
-	puts $_file "[get_object_name $register]/D -> [get_object_name [get_attribute [get_timing_paths -to [get_object_name $register]/D ] startpoint]]"
+	puts $_file "[get_object_name $register]/D <- [get_object_name [get_attribute [get_timing_paths -to [get_object_name $register]/D ] startpoint]]"
 	puts $_file ".LIB SAED90nm.lib TT_12"
 	puts $_file ".include saed90nm.cdl"
 	puts $_file ".global udd"
@@ -284,6 +293,7 @@ foreach_in_collection register [all_registers] {
 	puts $_file "set appendwrite"
 	puts $_file "set filetype=ascii"
 	puts $_file "run"
+	puts $_file "meas TRAN prop_delay TRIG clk val=0.6 cross=1 TARG wire[expr {$index-1}] val=0.6 cross=1"
 	puts $_file ".endc"
 	puts $_file ".end"
 
