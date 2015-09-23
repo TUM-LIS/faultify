@@ -13,7 +13,7 @@ end
 for i=1:size(slack,1)
     i
     act_name = slack{i,1};
-    tau(i) = run_spice(act_name)+t_setup(i);
+    tau(i) = run_spice(act_name,12)+t_setup(i);
 end
 
 %%
