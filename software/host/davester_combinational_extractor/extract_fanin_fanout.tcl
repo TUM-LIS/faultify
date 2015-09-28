@@ -2,17 +2,9 @@
 source ../setup_asic_lib.tcl
 read_file -format vhdl {../b14.vhd}
 create_clock -name "clk" -period 20 -waveform { 0 10  }  { clock }
+set_fix_multiple_port_nets -all -buffer_constants
 compile -exact_map
+define_name_rules limited -restricted "!@#$%^&*()\\-[]" -first_restricted "a-z"
+change_names  -rules  limited -verbose
+write -hierarchy -format verilog -output ../b14_syn.v
 
-
-report_timing -path full -delay max -nworst 1 -input_pins -max_paths 100000 -significant_digits 5 -nosplit -sort_by group -unique_pins -nets > full_report.txt
-
-
-
-#report_net [get_nets -hierarchical] > all_fanout.txt
-
-foreach_in_collection register [all_registers] {
-	puts "Generating fanin/fanout report for: [get_object_name $register]"
-	report_transitive_fanout -from [get_object_name $register]/* -nosplit > fanout_[get_object_name $register]
-	report_transitive_fanin  -to   [get_object_name $register]/* -nosplit > fanin_[get_object_name $register]
-	}

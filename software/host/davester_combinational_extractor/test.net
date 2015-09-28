@@ -1,0 +1,36 @@
+circuit_lh_94
+
+.LIB SAED90nm.lib TT_12
+.include test.sp
+.include saed90nm.cdl
+.global udd
+.global uss
+
+
+VDD udd 0 DC 1.2V
+VSS uss 0 DC 0V
+
+
+VCLK clk 0 PULSE (0V 1.2V 5NS 0.01PS 0.01PS 5NS 10NS) 
+VIN wire0 0 DC 1.2 PULSE (0V 1.200000e+00V 1NS 0PS 0PS 150NS) 
+
+*** NETLIST DESCRIPTION ***
+
+x1 clk uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss udd uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss wire0 wire1 wire2 wire3 wire4 wire5 wire6 wire7 wire8 wire9 wire10 wire11 wire12 wire13 wire14 wire15 wire16 wire17 wire18 wire19 wire20 wire21 wire22 wire23 wire24 wire25 wire26 wire27 wire28 wire29 wire30 wire31 b14
+
+
+**** SIMULATION ****
+
+.tran 100p 20n 
+
+**** PROPAGATION DELAY ****
+
+.control
+set appendwrite
+set filetype=ascii
+run
+*meas TRAN prop_delay_circuit_lh_94 TRIG clk val=0.6 cross=LAST TARG wire1 val=0.6 cross=LAST
+*meas TRAN prop_delay_circuit_lh_94 TRIG wire1 val=0.6 cross=LAST TARG wire2 val=0.6 cross=LAST
+*print prop_delay_circuit_lh_94 > /home/ga37jet/1.thesis/matlab/vos_output/fpu100_divoutput_lh_94_1.200000e+00.out > /home/ga37jet/1.thesis/matlab/vos_output/
+.endc
+.end
