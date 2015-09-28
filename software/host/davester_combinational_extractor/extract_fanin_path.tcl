@@ -27,7 +27,7 @@ foreach_in_collection register [all_registers] {
 	set spice_csv 1
 	
 	##
-	for {set v 6} {$v <= 12} {incr v} {
+	for {set v 60} {$v <= 120} {incr v} {
 	##
 	## open a file
 	set _file [open [get_object_name $register]_$v.net w]
@@ -41,10 +41,10 @@ foreach_in_collection register [all_registers] {
 	puts $_file ".include saed90nm.cdl"
 	puts $_file ".global udd"
 	puts $_file ".global uss"
-	puts $_file "VDD udd 0 DC [expr {double($v)/10}]V"
+	puts $_file "VDD udd 0 DC [expr {double($v)/100}]V"
 	puts $_file "VSS uss 0 DC 0V"
 	puts $_file "VCLK clk 0 PULSE (0V 1.2V 10NS 0.01PS 0.01PS 10NS 20NS)" 
-	puts $_file "VIN wire0 0 DC [expr {double($v)/10}] PULSE (0V 1.200000e+00V 1NS 0PS 0PS 150NS)" 
+	puts $_file "VIN wire0 0 DC [expr {double($v)/100}] PULSE (0V 1.200000e+00V 1NS 0PS 0PS 150NS)" 
 	puts $_file "*** NETLIST DESCRIPTION ***"
 	}
 
@@ -384,7 +384,7 @@ foreach_in_collection register [all_registers] {
 	puts $_file "set appendwrite"
 	puts $_file "set filetype=ascii"
 	puts $_file "run"
-	puts $_file "meas TRAN prop_delay TRIG clk val=0.6 cross=1 TARG wire[expr {$index-1}] val=[expr {double($v)/20}] cross=1"
+	puts $_file "meas TRAN prop_delay TRIG clk val=0.6 cross=1 TARG wire[expr {$index-1}] val=[expr {double($v)/200}] cross=1"
 	puts $_file "quit"
 	puts $_file ".endc"
 	puts $_file ".end"
