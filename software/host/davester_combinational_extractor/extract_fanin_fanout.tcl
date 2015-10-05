@@ -8,3 +8,5 @@ define_name_rules limited -restricted "!@#$%^&*()\\-[]" -first_restricted "a-z"
 change_names  -rules  limited -verbose
 write -hierarchy -format verilog -output ../b14_syn.v
 
+
+yosys -p 'write_spice test.sp' yosys_saed90nm.v b14_syn.v

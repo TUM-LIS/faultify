@@ -12,6 +12,7 @@ for i=1:size(slack,1)
     t_setup(i) = slack{i,3}.*1E-9;
 end
 
+%%
 if (0)
 
 for i=1:1%size(slack,1)
@@ -65,3 +66,10 @@ else
   end  
     
 end
+
+
+%%
+subplot(2,1,1)
+plot(1:size(slack,1),tclk-tau_dc,'r-',1:size(slack,1),opt_slack,'g-')
+subplot(2,1,2)
+plot(120-opt_v)
