@@ -73,3 +73,8 @@ subplot(2,1,1)
 plot(1:size(slack,1),tclk-tau_dc,'r-',1:size(slack,1),opt_slack,'g-')
 subplot(2,1,2)
 plot(120-opt_v)
+
+
+%% 
+save opt_slack.mat opt_slack
+save opt_v.mat opt_v

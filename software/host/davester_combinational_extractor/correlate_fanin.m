@@ -14,16 +14,18 @@ for i=1:size(slack,1)
     i
     act_list = unique(fanin{i}(:,2));
     for j=1:size(slack,1)
+        
         act_list_comp = unique(fanin{j}(:,2));
         for k=1:size(act_list,1)
+            
             for l=1:size(act_list_comp,1)
-                   if strcmp(act_list{k},act_list_com{l})
+                
+                   if strcmp(act_list{k},act_list_comp{l})
                        found(i,j) = found(i,j)+1; 
                    end
             end
         end
-
-        
+        found(i,j) = found(i,j)/numel(unique(fanin{i}(:,2)));
     end
 end
 
