@@ -10,19 +10,21 @@ proc count_elements {l} {
 
 set _slackfile [open slack.csv w]
 
-foreach_in_collection register [all_registers] {
+foreach_in_collection register [all_registers -no_hierarchy] {
 
 puts -nonewline $_slackfile "[get_object_name $register],"
+if {[string equal [get_attribute [get_timing_paths -to [get_object_name $register]/D ] slack] "INFINITY"]} {
+puts -nonewline $_slackfile "inf,"
+} else {
 puts -nonewline $_slackfile "[get_attribute [get_timing_paths -to [get_object_name $register]/D ] slack],"
+}
 puts 		$_slackfile "[get_attribute [get_timing_paths -to [get_object_name $register]/D ] endpoint_setup_time_value]"
 
 }
 close $_slackfile
 
-foreach_in_collection register [all_registers] {
+foreach_in_collection register [all_registers -no_hierarchy ] {
 	
-	puts "[get_object_name $register]"
-
 
 	set spice_csv 1
 	
@@ -51,9 +53,11 @@ foreach_in_collection register [all_registers] {
 	set index 1
 	set totalindex 1
 	set alternating 0
+	set pin_start 0
 
 	foreach_in_collection point  [get_attribute [get_timing_paths -to [get_object_name $register]/D ] points] {
 		
+
 		if {$index>0} {
 		
 
@@ -73,10 +77,27 @@ foreach_in_collection register [all_registers] {
 		## Load capacitance
 		puts $_file "[get_attribute [get_nets -of_objects [get_attribute $point object]] actual_max_net_capacitance]"
 		} elseif {$spice_csv == 1} {
+			#puts "[get_object_name [get_attribute $point object] ]"
+
 			if {$alternating == 0} {
+			
+			if {$pin_start == 1} {
+				set capacitance [get_attribute [get_nets -of_objects [get_attribute $point object]] actual_max_net_capacitance]
+				puts $_file "c$totalindex wire[expr {$index-1}] 0 [expr {$capacitance/100}]pF"
+				set pin_start 0
+			}
+			
+			if {[string equal [get_attribute [get_object_name [get_attribute $point object]] object_class] "port"]} {	
+				set gatenamespice [get_object_name [get_attribute $point object]]
+				puts $_file "R$gatenamespice wire[expr {$index-1}] wire$index 0"
+
+				set pin_start 1
+				set alternating 1
+				incr index
+			} else {
 
 			set fields [split [get_object_name [get_attribute $point object]] "/"]
-			
+			#puts $_file "[get_object_name [get_attribute $point object]]"
 			set gatename [lindex $fields 0]
 			set gatenamespice [lindex $fields 0]
 			#puts $_file "[lindex $fields 0]"
@@ -99,19 +120,27 @@ foreach_in_collection register [all_registers] {
 			#puts -nonewline $_file "$inputpinname,"
 			#puts -nonewline $_file "$gatetype,"
 			#puts $_file ""
-
+			}
 			} elseif {$alternating == 1} {
+					
+					
 				set fields [split [get_object_name [get_attribute $point object]] "/"]
 				lassign $fields nextgatename outputpinname
 				set capacitance [get_attribute [get_nets -of_objects [get_attribute $point object]] actual_max_net_capacitance]
 				set fields2 [split [get_object_name [get_nets -of_objects [get_attribute $point object]]] "/"]
 				lassign $fields2 unused netname
-				#puts -nonewline $_file "input pinname $inputpinname,"
+				#puts $_file "$nextgatename $outputpinname [get_attribute [get_cells $nextgatename] ref_name]"
 				if {[string equal -length 6 $gatetype "DFFARX"]} {
 					if {[string equal $outputpinname "Q"]} {
 						puts $_file "x$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd udd uss $gatetype"
 					} else {
 						puts $_file "x$gatenamespice clk wire[expr {$index-1}] 0 wire$index udd udd uss $gatetype"
+					}
+				} elseif {[string equal -length 4 $gatetype "DFFX"]} {
+ 					if {[string equal $outputpinname "Q"]} {
+						puts $_file "x$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd uss $gatetype"
+					} else {
+						puts $_file "x$gatenamespice clk wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
 					}
 				} elseif {[string equal -length 6 $gatetype "NBUFFX"]} { 
 					puts $_file "x$gatenamespice wire[expr {$index-1}] udd uss wire$index $gatetype"
@@ -185,13 +214,13 @@ foreach_in_collection register [all_registers] {
 					}
 				} elseif {[string equal -length 6 $gatetype "OAI22X"]} {
 					if {[string equal $inputpinname "IN1"]} {
-						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 0 0 wire$index udd uss $gatetype"
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN2"]} {
-						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] 0 0 wire$index udd uss $gatetype"
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd 0 wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN3"]} {
-						puts $_file "x$gatenamespice 0 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN4"]} {
-						puts $_file "x$gatenamespice 0 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+						puts $_file "x$gatenamespice udd 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
 					}
 				} elseif {[string equal -length 6 $gatetype "AO221X"]} {
 					if {[string equal $inputpinname "IN1"]} {
@@ -241,6 +270,16 @@ foreach_in_collection register [all_registers] {
 						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN2"]} {
 						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 3 $gatetype "OR4X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice 0 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice 0 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
 					}
 				} elseif {[string equal -length 5 $gatetype "XOR2X"]} {
 					if {[string equal $inputpinname "IN1"]} {
@@ -369,13 +408,30 @@ foreach_in_collection register [all_registers] {
 			}
 			set alternating [expr {!$alternating}]
 
+
 		}
 
 		
 		}
 
 	}
+	
+	#puts $_file "$gatename $outputpinname [get_attribute [get_cells $gatename] ref_name]"
+	set finalgatetype [get_attribute [get_cells $gatename] ref_name]
 
+	if {[string equal -length 6 $finalgatetype "DFFARX"]} {
+		if {[string equal $outputpinname "Q"]} {
+			puts $_file "xFF$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd udd uss $finalgatetype"
+		} else {
+			puts $_file "xFF$gatenamespice clk wire[expr {$index-1}] 0 wire$index udd udd uss $finalgatetype"
+		}
+	} elseif {[string equal -length 4 $finalgatetype "DFFX"]} {
+ 		if {[string equal $outputpinname "Q"]} {
+			puts $_file "xFF$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd uss $finalgatetype"
+		} else {
+			puts $_file "xFF$gatenamespice clk wire[expr {$index-1}] 0 wire$index udd uss $finalgatetype"
+		}
+	}
 
 	puts $_file "**** SIMULATION ****"
 	puts $_file ".tran 200p 40n" 

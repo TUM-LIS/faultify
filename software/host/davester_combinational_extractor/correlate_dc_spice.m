@@ -1,6 +1,6 @@
 clear all
 
-slack = import_slack_csv('dc_syn/slack.csv');
+slack = import_slack_csv('dc_syn_fpu_mul/slack.csv');
 
 tclk = 20;
 %%
@@ -13,7 +13,7 @@ end
 for i=1:size(slack,1)
     i
     act_name = slack{i,1};
-    tau(i) = run_spice(act_name,12)+t_setup(i);
+    tau(i) = run_spice(act_name,120)+t_setup(i);
 end
 
 %%

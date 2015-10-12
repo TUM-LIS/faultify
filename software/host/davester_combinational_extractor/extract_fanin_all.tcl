@@ -1,4 +1,4 @@
-foreach_in_collection register [all_registers] {
+foreach_in_collection register [all_registers -no_hierarchy] {
 
 	set _file [open [get_object_name $register]_fanin.csv w]
 	
