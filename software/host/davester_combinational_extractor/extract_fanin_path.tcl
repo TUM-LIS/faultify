@@ -10,9 +10,18 @@ proc count_elements {l} {
 
 set _slackfile [open slack.csv w]
 
-foreach_in_collection register [all_registers -no_hierarchy] {
+foreach_in_collection register [all_registers] {
 
-puts -nonewline $_slackfile "[get_object_name $register],"
+
+set fields [split [get_object_name $register] "/"]
+set easyname ""	
+for {set i 0} {$i < [llength $fields]} {incr i} {
+	append easyname [lindex $fields $i]	
+}
+
+
+puts -nonewline $_slackfile "$easyname,"
+
 if {[string equal [get_attribute [get_timing_paths -to [get_object_name $register]/D ] slack] "INFINITY"]} {
 puts -nonewline $_slackfile "inf,"
 } else {
@@ -23,16 +32,23 @@ puts 		$_slackfile "[get_attribute [get_timing_paths -to [get_object_name $regis
 }
 close $_slackfile
 
-foreach_in_collection register [all_registers -no_hierarchy ] {
+foreach_in_collection register [all_registers] {
 	
 
 	set spice_csv 1
 	
 	##
-	for {set v 60} {$v <= 120} {incr v} {
+	for {set v 120} {$v <= 120} {incr v} {
 	##
 	## open a file
-	set _file [open [get_object_name $register]_$v.net w]
+	set fields [split [get_object_name $register] "/"]
+	set filename ""	
+	for {set i 0} {$i < [llength $fields]} {incr i} {
+		append filename [lindex $fields $i]	
+	}
+	set filename_full $filename\_$v.net
+
+	set _file [open $filename_full w]
 
 	puts "[get_object_name $register]"
 
@@ -45,8 +61,10 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 	puts $_file ".global uss"
 	puts $_file "VDD udd 0 DC [expr {double($v)/100}]V"
 	puts $_file "VSS uss 0 DC 0V"
-	puts $_file "VCLK clk 0 PULSE (0V 1.2V 10NS 0.01PS 0.01PS 10NS 20NS)" 
-	puts $_file "VIN wire0 0 DC [expr {double($v)/100}] PULSE (0V 1.200000e+00V 1NS 0PS 0PS 150NS)" 
+	puts $_file "VCLK clk 0 PULSE (0V 1.2V 10NS 0.01PS 0.01PS 30NS 60NS)" 
+        #puts $_file "VIN   wire0p uss PULSE (0V [expr {double($v)/100}]V 1NS 0PS 0PS 150NS)"
+        #puts $_file "VIN_n wire0n uss PULSE ([expr {double($v)/100}]V 0V 1NS 0PS 0PS 150NS)"
+	puts $_file "VIN wire0 uss PWL (0NS 1.2V 1NS 1.2V 1NS 0V 50NS 0V 50NS 1.2V)"
 	puts $_file "*** NETLIST DESCRIPTION ***"
 	}
 
@@ -89,7 +107,8 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 			
 			if {[string equal [get_attribute [get_object_name [get_attribute $point object]] object_class] "port"]} {	
 				set gatenamespice [get_object_name [get_attribute $point object]]
-				puts $_file "R$gatenamespice wire[expr {$index-1}] wire$index 0"
+				#puts $_file "R$gatenamespice wire[expr {$index-1}] wire$index 0"
+				puts $_file "x$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd uss DFFX1"
 
 				set pin_start 1
 				set alternating 1
@@ -135,6 +154,13 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 						puts $_file "x$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd udd uss $gatetype"
 					} else {
 						puts $_file "x$gatenamespice clk wire[expr {$index-1}] 0 wire$index udd udd uss $gatetype"
+					}
+				# DFFSSRX1 CLK D Q QN RSTB SETB VDD VSS
+				} elseif {[string equal -length 7 $gatetype "DFFSSRX"]} {
+					if {[string equal $outputpinname "Q"]} {
+						puts $_file "x$gatenamespice clk wire[expr {$index-1}] wire$index 0 udd udd udd uss $gatetype"
+					} else {
+						puts $_file "x$gatenamespice clk wire[expr {$index-1}] 0 wire$index udd udd udd uss $gatetype"
 					}
 				} elseif {[string equal -length 4 $gatetype "DFFX"]} {
  					if {[string equal $outputpinname "Q"]} {
@@ -212,6 +238,14 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 					} elseif {[string equal $inputpinname "IN4"]} {
 						puts $_file "x$gatenamespice 0 0 udd wire[expr {$index-1}] wire$index udd uss $gatetype"
 					}
+				} elseif {[string equal -length 6 $gatetype "OAI21X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					} 
 				} elseif {[string equal -length 6 $gatetype "OAI22X"]} {
 					if {[string equal $inputpinname "IN1"]} {
 						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 wire$index udd uss $gatetype"
@@ -260,6 +294,82 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 					} elseif {[string equal $inputpinname "IN6"]} {
 						puts $_file "x$gatenamespice 0 0 0 0 udd wire[expr {$index-1}] wire$index udd uss $gatetype"
 					}
+				} elseif {[string equal -length 7 $gatetype "AOI222X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] udd 0 0 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice udd wire[expr {$index-1}] 0 0 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice 0 0 wire[expr {$index-1}] udd 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice 0 0 udd wire[expr {$index-1}] 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN5"]} {
+						puts $_file "x$gatenamespice 0 0 0 0 wire[expr {$index-1}] udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN6"]} {
+						puts $_file "x$gatenamespice 0 0 0 0 udd wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 5 $gatetype "OA22X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice udd 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 6 $gatetype "OA221X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice udd 0 0 wire[expr {$index-1}] udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN5"]} {
+						puts $_file "x$gatenamespice udd 0 udd 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 7 $gatetype "OAI221X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] 0 udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice udd 0 0 wire[expr {$index-1}] udd wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN5"]} {
+						puts $_file "x$gatenamespice udd 0 udd 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 6 $gatetype "OA222X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice udd 0 0 wire[expr {$index-1}] udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN5"]} {
+						puts $_file "x$gatenamespice udd 0 udd 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN6"]} {
+						puts $_file "x$gatenamespice udd 0 udd 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 7 $gatetype "OAI222X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 udd 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] udd 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice udd 0 wire[expr {$index-1}] 0 udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN4"]} {
+						puts $_file "x$gatenamespice udd 0 0 wire[expr {$index-1}] udd 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN5"]} {
+						puts $_file "x$gatenamespice udd 0 udd 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN6"]} {
+						puts $_file "x$gatenamespice udd 0 udd 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
 				} elseif {[string equal -length 4 $gatetype "INVX"]} {
 					puts $_file "x$gatenamespice wire[expr {$index-1}] udd uss wire$index $gatetype"
 				} elseif {[string equal -length 4 $gatetype "DELLN"]} {
@@ -270,6 +380,14 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
 					} elseif {[string equal $inputpinname "IN2"]} {
 						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
+					}
+				} elseif {[string equal -length 3 $gatetype "OR3X"]} {
+					if {[string equal $inputpinname "IN1"]} {
+						puts $_file "x$gatenamespice wire[expr {$index-1}] 0 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN2"]} {
+						puts $_file "x$gatenamespice 0 wire[expr {$index-1}] 0 wire$index udd uss $gatetype"
+					} elseif {[string equal $inputpinname "IN3"]} {
+						puts $_file "x$gatenamespice 0 0 wire[expr {$index-1}] wire$index udd uss $gatetype"
 					}
 				} elseif {[string equal -length 3 $gatetype "OR4X"]} {
 					if {[string equal $inputpinname "IN1"]} {
@@ -379,6 +497,20 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 					} elseif {[string equal $inputpinname "S1"]} {
 						puts $_file "x$gatenamespice udd uss uss udd wire$index uss wire[expr {$index-1}] udd uss $gatetype"
 					}
+				} elseif {[string equal -length 5 $gatetype "HADDX"]} {
+					if {[string equal $outputpinname "C1"]} {
+						if {[string equal $inputpinname "A0"]} {
+							puts $_file "x$gatenamespice wire[expr {$index-1}] udd wire$index uss udd uss $gatetype"
+						} elseif {[string equal $inputpinname "B0"]} {
+							puts $_file "x$gatenamespice udd wire[expr {$index-1}] wire$index uss udd uss $gatetype"
+						} 
+					} else {
+						if {[string equal $inputpinname "A0"]} {
+							puts $_file "x$gatenamespice wire[expr {$index-1}] uss uss wire$index udd uss $gatetype"
+						} elseif {[string equal $inputpinname "B0"]} {
+							puts $_file "x$gatenamespice uss wire[expr {$index-1}] uss wire$index udd uss $gatetype"
+						} 
+					}
 				} elseif {[string equal -length 5 $gatetype "FADDX"]} {
 					if {[string equal $outputpinname "CO"]} {
 						if {[string equal $inputpinname "A"]} {
@@ -434,13 +566,13 @@ foreach_in_collection register [all_registers -no_hierarchy ] {
 	}
 
 	puts $_file "**** SIMULATION ****"
-	puts $_file ".tran 200p 40n" 
+	puts $_file ".tran 100p 140n UIC" 
 	puts $_file "**** PROPAGATION DELAY ****"
 	puts $_file ".control"
 	puts $_file "set appendwrite"
 	puts $_file "set filetype=ascii"
 	puts $_file "run"
-	puts $_file "meas TRAN prop_delay TRIG clk val=0.6 cross=1 TARG wire[expr {$index-1}] val=[expr {double($v)/200}] cross=1"
+	puts $_file "meas TRAN prop_delay TRIG clk val=0.6 cross=3 TARG wire[expr {$index-1}] val=[expr {double($v)/200}] cross=LAST"
 	puts $_file "quit"
 	puts $_file ".endc"
 	puts $_file ".end"

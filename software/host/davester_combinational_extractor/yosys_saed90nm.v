@@ -5,7 +5,16 @@ module DFFX1 (input CLK, D, output Q, QN, input VDD, VSS);
 endmodule
 
 (* blackbox *)
+module DFFX2 (input CLK, D, output Q, QN, input VDD, VSS);
+endmodule
+
+
+(* blackbox *)
 module DFFARX1 (input CLK, D, output Q, QN, input RSTB, VDD, VSS);
+endmodule
+
+(* blackbox *)
+module DFFSSRX1 (input CLK, D, output Q, QN, input RSTB, SETB, VDD, VSS);
 endmodule
 
 (* blackbox *)
@@ -184,8 +193,17 @@ module AOI221X1 (input IN1, IN2, IN3, IN4, IN5, output QN, input VDD, VSS);
 endmodule
 
 (* blackbox *)
+module AOI221X2 (input IN1, IN2, IN3, IN4, IN5, output QN, input VDD, VSS);
+endmodule
+
+(* blackbox *)
 module AOI222X1 (input IN1, IN2, IN3, IN4, IN5, IN6, output QN, input VDD, VSS);
 endmodule
+
+(* blackbox *)
+module AOI222X2 (input IN1, IN2, IN3, IN4, IN5, IN6, output QN, input VDD, VSS);
+endmodule
+
 
 (* blackbox *)
 module OA222X1 (input IN1, IN2, IN3, IN4, IN5, IN6, output Q, input VDD, VSS);
@@ -200,6 +218,10 @@ module OAI221X1 (input IN1, IN2, IN3, IN4, IN5, output QN, input VDD, VSS);
 endmodule
 
 (* blackbox *)
+module OAI222X1 (input IN1, IN2, IN3, IN4, IN5, IN6, output QN, input VDD, VSS);
+endmodule
+
+(* blackbox *)
 module OA21X1 (input IN1, IN2, IN3, output Q, input VDD, VSS);
 endmodule
 
@@ -209,6 +231,14 @@ endmodule
 
 (* blackbox *)
 module FADDX2 (input A, B, CI, output CO, S, input VDD, VSS);
+endmodule
+
+(* blackbox *)
+module HADDX1 (input A0, B0, output C1, S0, input VDD, VSS);
+endmodule
+
+(* blackbox *)
+module HADDX2 (input A0, B0, output C1, S0, input VDD, VSS);
 endmodule
 
 (* blackbox *)

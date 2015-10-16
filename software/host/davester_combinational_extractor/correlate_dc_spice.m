@@ -2,7 +2,7 @@ clear all
 
 slack = import_slack_csv('dc_syn_fpu_mul/slack.csv');
 
-tclk = 20;
+tclk = 60;
 %%
 for i=1:size(slack,1)
     tau_dc(i) = (tclk - slack{i,2}).*1E-9;
@@ -17,4 +17,8 @@ for i=1:size(slack,1)
 end
 
 %%
-plot(1:size(slack,1),tau,'r-',1:size(slack,1),tau_dc,'b-')
+tau(tau>.1) = 0;
+len = size(slack,1);
+plot(...%1:len,tclk*1E-9*ones(1,len),...
+     1:len,tau,'r-',...
+     1:len,tau_dc,'b-')
