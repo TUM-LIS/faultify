@@ -1,0 +1,19 @@
+circuit_lh_94
+.LIB SAED90nm.lib TT_12
+.include test.sp
+.include saed90nm.cdl
+.global udd
+.global uss
+VDD udd 0 DC 1.2V
+VSS uss 0 DC 0V
+VCLK clk 0 PULSE (0V 1.2V 10NS 0.01PS 0.01PS 30NS 60NS)
+a8 %vd([opa1 0 opa2 0 opa3 0 opa4 0 opa5 0 opa6 0 opa7 0 opa8 0 opa9 0 opa10 0 opa11 0 opa12 0 opa13 0 opa14 0 opa15 0 opa16 0 opa17 0 opa18 0 opa19 0 opa20 0 opa21 0 opa22 0 opa23 0 opa24 0 opa25 0 opa26 0 opa27 0 opa28 0 opa29 0 opa30 0 opa31 0 opa32 0 opb1 0 opb2 0 opb3 0 opb4 0 opb5 0 opb6 0 opb7 0 opb8 0 opb9 0 opb10 0 opb11 0 opb12 0 opb13 0 opb14 0 opb15 0 opb16 0 opb17 0 opb18 0 opb19 0 opb20 0 opb21 0 opb22 0 opb23 0 opb24 0 opb25 0 opb26 0 opb27 0 opb28 0 opb29 0 opb30 0 opb31 0 opb32 0 start 0 ]) filesrc
+.model filesrc filesource (file="stimuli.txt" amploffset=[0 0] amplscale=[1 1] timeoffset=0 timescale=1 timerelative=false amplstep=false)
+x1 clk opa1 opa2 opa3 opa4 opa5 opa6 opa7 opa8 opa9 opa10 opa11 opa12 opa13 opa14 opa15 opa16 opa17 opa18 opa19 opa20 opa21 opa22 opa23 opa24 opa25 opa26 opa27 opa28 opa29 opa30 opa31 opa32 opb1 opb2 opb3 opb4 opb5 opb6 opb7 opb8 opb9 opb10 opb11 opb12 opb13 opb14 opb15 opb16 opb17 opb18 opb19 opb20 opb21 opb22 opb23 opb24 opb25 opb26 opb27 opb28 opb29 opb30 opb31 opb32 uss udd uss uss uss out1 out2 out3 out4 out5 out6 out7 out8 out9 out10 out11 out12 out13 out14 out15 out16 out17 out18 out19 out20 out21 out22 out23 out24 out25 out26 out27 out28 out29 out30 out31 out32 start ready ine over under divz inf zero qnan snan fpu 
+.tran 100p 2ns UIC
+.control
+set appendwrite
+set filetype=ascii
+run
+.endc
+.end
