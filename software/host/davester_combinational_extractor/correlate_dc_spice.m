@@ -19,6 +19,13 @@ end
 %%
 tau(tau>.1) = 0;
 len = size(slack,1);
-plot(...%1:len,tclk*1E-9*ones(1,len),...
+plot(1:len,tclk*1E-9*ones(1,len),...
      1:len,tau,'r-',...
      1:len,tau_dc,'b-')
+ 
+ 
+ 
+ %%
+ 
+ save tau_fpu_mul_120.mat tau
+ save tau_fpu_mul_dc.mat tau_dc

@@ -28,9 +28,20 @@ set_fix_multiple_port_nets -all -buffer_constants
 current_design fpu
 
 compile -exact_map
-define_name_rules limited -restricted "!@#$%^&*()\\-[]" -first_restricted "a-z"
-change_names  -rules  limited
+define_name_rules limited -restricted "!@#$%^&*()\\-[]/" 
+define_name_rules NO_FSLASH -restricted "/" -replacement_char "_"
+define_name_rules NO_SPACE -restricted " " -replacement_char "_"
+define_name_rules NO_BSLASH -restricted "\\" -replacement_char "_"
+define_name_rules bus_delete -restricted "[]" -replacement_char "_"
+
+#change_names  -rules  limited
+change_names -rules bus_delete -hierarchy
+change_names -rules NO_FSLASH -hierarchy
+change_names -rules NO_SPACE -hierarchy
+change_names -rules NO_BSLASH -hierarchy
+
+
 write -hierarchy -format verilog -output ../fpu_mul_syn.v
 
 
-#yosys -p 'write_spice test.sp' yosys_saed90nm.v b14_syn.v
+#yosys -p 'write_spice -neg VSS -pos VDD test.sp' yosys_saed90nm.v b14_syn.v

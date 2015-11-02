@@ -31,7 +31,7 @@ end
 
 else
  
-  for i=1:size(slack,1)
+  for i=1:100%size(slack,1)
       done = 0;
       max_v = 120;
       min_v = 50;
@@ -69,7 +69,7 @@ end
 
 
 %%
-for i=1:size(slack,1)
+for i=1:100%size(slack,1)
     i
     act_name = slack{i,1};
     tau120(i) = run_spice(act_name,120)+t_setup(i);

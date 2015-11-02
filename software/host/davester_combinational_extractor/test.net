@@ -17,14 +17,23 @@ VIN in0 0 PULSE (0V 1.2V 15NS 0PS 0PS 150NS)
 
 VRST rst 0 PULSE (0V 1.2V 9NS 0.01PS 0.01PS 12NS) 
 
+
+a8 %vd([v1 0 v2 0 v3 0 v4 0 v5 0]) filesrc
+
+.model filesrc filesource (file="sim/df_source.text")
+
+
 *** NETLIST DESCRIPTION ***
 
-x1 clk rst uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss in0 uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss wire0 wire1 wire2 wire3 wire4 wire5 wire6 wire7 wire8 wire9 wire10 wire11 wire12 wire13 wire14 wire15 wire16 wire17 wire18 wire19 wire20 wire21 wire22 wire23 wire24 wire25 wire26 wire27 wire28 wire29 wire30 wire31 b14
+*x1 clk rst uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss in0 uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss uss *uss uss uss uss uss uss wire0 wire1 wire2 wire3 wire4 wire5 wire6 wire7 wire8 wire9 wire10 wire11 wire12 wire13 wire14 wire15 wire16 wire17 wire18 wire19 wire20 wire21 wire22 wire23 wire24 wire25 wire26 *wire27 wire28 wire29 wire30 wire31 b14
+
+
+
 
 
 **** SIMULATION ****
 
-.tran 100p 40n UIC
+.tran 10p 10000ns UIC
 
 **** PROPAGATION DELAY ****
 

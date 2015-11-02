@@ -38,7 +38,7 @@ foreach_in_collection register [all_registers] {
 	set spice_csv 1
 	
 	##
-	for {set v 120} {$v <= 120} {incr v} {
+	for {set v 50} {$v <= 120} {incr v} {
 	##
 	## open a file
 	set fields [split [get_object_name $register] "/"]

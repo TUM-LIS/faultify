@@ -1,18 +1,22 @@
 set_app_var search_path [list .  /opt/tools/synopsys/SAED90_EDK/SAED_EDK90nm/Digital_Standard_cell_Library/synopsys/models]
 set_app_var link_path [list * saed90nm_typ.db]
 
-read_db saed90nm_min.db
+read_db saed90nm_typ.db
 
-read_verilog ../fpu_mul_syn.v
-current_design fpu
+read_verilog ../test_circuit_syn.v
+current_design test_circuit
+link_design test_circuit
 
-link_design fpu
+#read_verilog ../fpu_mul_syn.v
+#current_design fpu
+#link_design fpu
+
+#define_scaling_lib_group {saed90nm_max.db saed90nm_typ.db saed90nm_min.db}
+define_scaling_lib_group {saed90nm_typ.db saed90nm_typ_tm.db saed90nm_typ_ntl.db}
 
 
-define_scaling_lib_group {saed90nm_min.db saed90nm_typ.db saed90nm_max.db}
-
-create_clock -name "clk" -period 60 -waveform { 0 30  }  { Clk_i  }
-
+create_clock -name "clk" -period 0.6 -waveform { 0 0.3  }  {clk}
+#create_clock -name "clk" -period 60 -waveform { 0 30  }  {Clk_i}
 
 create_power_domain TOP
 
@@ -37,16 +41,20 @@ set_domain_supply_net pdA -primary_power_net VDD_LOW -primary_ground_net VSS
 
 
 set_voltage 1.2 -object_list VDD_TYP
-set_voltage 1.1 -object_list VDD_LOW
+set_voltage 0.8 -object_list VDD_LOW
 set_temperature 25.0 -object_list [get_cells]
 
 check_timing -override_defaults operating_conditions
 
+report_timing
 
-set power_enable_analysis true
-set_switching_activity [get_nets -hierarchical *] -static_probability 0.1 -toggle_rate 0.1 -period 60
-set_switching_activity [get_nets Clk_i] -static_probability 0.5 -toggle_rate 1.0 -period 60
-report_power
+#set power_enable_analysis true
+#set_switching_activity [get_nets -hierarchical *] -static_probability 0.1 -toggle_rate 0.1 -period 60
+#set_switching_activity [get_nets Clk_i] -static_probability 0.5 -toggle_rate 1.0 -period 60
+#report_power
 #1.305e-03
 #1.214e-03
+
+
+#write_sdf -version 2.1 -input_port_nets mydesign.sdf
 
