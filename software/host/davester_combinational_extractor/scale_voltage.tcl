@@ -1,17 +1,135 @@
+proc AND2_masking {cell_name pin_name} {
+    puts "calculating masking probability for AND2-Gate $cell_name ($pin_name)"
+
+    ## AND gate: all other pins have to be "1"
+    
+    if {[string equal $pin_name IN1]} {
+	set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+    }
+    if {[string equal $pin_name IN2]} {
+	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
+    }
+    return $p_mask
+}
+
+proc OR2_masking {cell_name pin_name} {
+    puts "calculating masking probability for OR2-Gate $cell_name ($pin_name)"
+
+    ## OR gate: all other pins have to be "0"
+    
+    if {[string equal $pin_name IN1]} {
+	set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+    }
+    if {[string equal $pin_name IN2]} {
+	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
+    }
+    return [expr 1-$p_mask]
+}
+
+
+
+proc multiply_list {list} {
+    set product 1
+    for {set x 0} {$x<[llength $list]} {incr x} {
+	set product [expr {$product*[lindex $list $x]}]
+    }
+    return $product
+}
+
+
+proc calc_overall_pe {pe_list slacks} {
+    set sum 0
+    for {set x 0} {$x<[llength $slacks]} {incr x} {
+	if {[lindex $slacks $x] <= 0} {
+	    set sum  [expr {double($sum) + [lindex $pe_list $x]}]
+	}
+    }
+    return $sum
+}
+
+
 proc calc_error_probability {path} {
 
     puts "calculating probability distribution for ep: [lindex [get_object_name [get_attribute $path endpoint]] 0]"
     
-    ## for all startpoints
+    set timing_points  [get_attribute $path points]
+    set endpoint "[lindex [get_object_name [get_attribute $path endpoint]] 0]"
+
     set point_index 0
+    set pe_list {}
+
+    
+
+    ## for all startpoints
     foreach_in_collection idx [get_attribute $path startpoint] {
-	puts "sp: [get_object_name $idx]"
+	puts "------------------------------"
+	puts "--sp--: [get_object_name $idx]"
+	puts "------------------------------"
+	
+	## for all waypoints
+	set act_point [get_attribute [index_collection $timing_points $point_index] object]
+	set act_waypoint_index 0
+	set equation {}
+	while {[string equal [get_object_name $act_point] $endpoint] == 0} {
+
+	    ## extract cell name, type and input pin
+	    set fields [split [get_object_name $act_point] "/"]
+	    set cell_name [lindex $fields 0]
+	    for {set i 1} {$i < [expr {[llength $fields]-1}]} {incr i} {
+		append cell_name "/"
+		append cell_name [lindex $fields $i]
+	    }
+	    set pin_name [lindex $fields [expr {[llength $fields]-1}] ]
+	    set ref_name [get_attribute [get_cells $cell_name] ref_name]
+
+
+	    ## We don't care about FFs
+	    if {[string equal -length 3 $ref_name "DFF"] == 0} {
+		
+		puts "tp: [get_object_name $act_point]"
+		puts "tp_ref: $cell_name -> $ref_name"
+		
+		## our starting factor of the calculation
+		## the switching activity of input pin
+		## the worst case resulting error of that path
+		## failing 
+		if {$act_waypoint_index == 0} {
+		    
+		    set alpha_raw [lindex [split [get_switching_activity [get_object_name $act_point] ] " "] 2]
+		    set alpha [expr {$alpha_raw*0.6/4}]
+		    #puts "alpha: $alpha"
+		    append equation $alpha " "
+		}
+		## Here we want to determine the probability that the
+		## signal is NOT masked. because then a fault will 
+		## be visible at the output
+		
+		if {[string equal -length 4 $ref_name AND2]} {
+		    set p_mask [AND2_masking $cell_name $pin_name]
+		}
+		if {[string equal -length 3 $ref_name OR2]} {
+		    set p_mask [OR2_masking $cell_name $pin_name]
+		}
+		#puts "p_mask: $p_mask"
+		append equation $p_mask " "
+		
+		
+		
+		incr act_waypoint_index 1
+	    }
+
+
+	    ## we increment by 2 to skip output pin net
+	    incr point_index 2
+	    set act_point [get_attribute [index_collection $timing_points $point_index] object]
+	}
+	incr point_index 1
+	puts "eq: $equation"
+	set pe [multiply_list $equation]
+	puts "p_error|tau>Tclk: $pe"
+	append pe_list $pe " "
     }
-        
-    
-    ## for all waypoints
-    
-    
+    return $pe_list
 }
 
 proc count_register {l} {
@@ -42,6 +160,12 @@ proc check_failing_paths {l} {
     }
     return $total
 }
+
+
+#########################
+## MAIN #################
+#########################
+
 
 
 
@@ -77,12 +201,21 @@ foreach_in_collection register [all_registers] {
 	puts "Startpoints: [get_object_name $startpoints]"
 	puts ""
 	
-	calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] 
+	set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000]]
+	#puts "$pe_list"
 	
 	
 	set voltage 1200
 	set num_failing_prev 0
-	
+
+	puts ""
+	puts ""
+	puts "-----------------------------"
+	puts "V O L T A G E   S C A L I N G"
+	puts "--------------!--------------"
+	puts ""
+	puts ""
+
 	while {$num_failing < $num_paths} {
 	    
 	    incr voltage -1
@@ -94,9 +227,11 @@ foreach_in_collection register [all_registers] {
 	    set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] slack]
 	    
 	    set num_failing [check_failing_paths $slacks]
-	    
+	 
 	    if {$num_failing > $num_failing_prev} {
-		puts "failing paths: [check_failing_paths $slacks] $voltage"
+		set sum_pe [calc_overall_pe $pe_list $slacks]
+		#puts "failing paths: [check_failing_paths $slacks] @ $voltage *E-4 V -> p_e: $sum_pe"
+		puts "$voltage,$sum_pe"
 		set num_failing_prev  $num_failing
 	    }
 	    
