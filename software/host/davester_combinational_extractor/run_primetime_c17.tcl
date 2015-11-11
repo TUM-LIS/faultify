@@ -3,9 +3,9 @@ set_app_var link_path [list * saed90nm_typ.db]
 
 read_db saed90nm_typ.db
 
-read_verilog ../test_circuit_syn.v
-current_design test_circuit
-link_design test_circuit
+read_verilog ../c17.v
+current_design c17
+link_design c17
 
 #read_verilog ../fpu_mul_syn.v
 #current_design fpu
@@ -15,7 +15,7 @@ link_design test_circuit
 define_scaling_lib_group {saed90nm_typ.db saed90nm_typ_tm.db saed90nm_typ_ntl.db}
 
 
-create_clock -name "clk" -period 0.6 -waveform { 0 0.3  }  {clk}
+create_clock -name "clk" -period 0.6 -waveform { 0 0.3  }  {CLK}
 #create_clock -name "clk" -period 60 -waveform { 0 30  }  {Clk_i}
 
 create_power_domain TOP

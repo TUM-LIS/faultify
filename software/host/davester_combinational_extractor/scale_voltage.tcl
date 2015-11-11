@@ -1,3 +1,23 @@
+proc initialize_gate_mask {register} {
+    set gate_mask {}
+    foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells] {
+	set act_name [get_object_name $cell]
+	set act_type [get_attribute $cell ref_name]
+	#puts "$act_name ($act_type)"
+	
+	if {[string equal -length 6 $act_type NAND2X]} {
+	    dict set gate_mask $act_name mask {rrf r1f ffr f1r 1rf 1fr};
+	}
+	if {[string equal -length 5 $act_type AND2X]} {
+	    dict set gate_mask $act_name mask {rrr r1r fff f1f 1rr 1ff};
+	}
+	
+    }
+    return $gate_mask  
+}
+
+
+
 proc AND2_masking {cell_name pin_name} {
     puts "calculating masking probability for AND2-Gate $cell_name ($pin_name)"
 
@@ -23,10 +43,22 @@ proc OR2_masking {cell_name pin_name} {
     if {[string equal $pin_name IN2]} {
 	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
     }
-    return [expr 1-$p_mask]
+    return [expr 1- $p_mask]
 }
 
-
+proc NAND2_masking {cell_name pin_name rise_fall} {
+    puts "calculating masking probability for NAND2-Gate $cell_name ($pin_name)"
+    
+    ## NAND gate: all other pins have to be "1"
+    
+    if {[string equal $pin_name IN1]} {
+	set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+    }
+    if {[string equal $pin_name IN2]} {
+	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
+    }
+    return $p_mask
+}
 
 proc multiply_list {list} {
     set product 1
@@ -45,6 +77,15 @@ proc calc_overall_pe {pe_list slacks} {
 	}
     }
     return $sum
+}
+
+
+proc calc_corrected_slack {slacks setup_times} {
+    set c_slack {}
+    for {set x 0} {$x<[llength $slacks]} {incr x} {
+	append c_slack [expr {[lindex $slacks $x] + [expr {[lindex $setup_times $x]}]/1}] " "
+    }
+    return $c_slack
 }
 
 
@@ -82,6 +123,7 @@ proc calc_error_probability {path} {
 	    set pin_name [lindex $fields [expr {[llength $fields]-1}] ]
 	    set ref_name [get_attribute [get_cells $cell_name] ref_name]
 
+	    
 
 	    ## We don't care about FFs
 	    if {[string equal -length 3 $ref_name "DFF"] == 0} {
@@ -96,19 +138,31 @@ proc calc_error_probability {path} {
 		if {$act_waypoint_index == 0} {
 		    
 		    set alpha_raw [lindex [split [get_switching_activity [get_object_name $act_point] ] " "] 2]
-		    set alpha [expr {$alpha_raw*0.6/4}]
+		    #puts "alpha_raw: $alpha_raw"
+
+		    set alpha [expr {$alpha_raw*0.44/4}]
+		    #set alpha 1
+
 		    #puts "alpha: $alpha"
 		    append equation $alpha " "
 		}
 		## Here we want to determine the probability that the
 		## signal is NOT masked. because then a fault will 
 		## be visible at the output
+
+
+		set rise_fall [get_attribute [index_collection $timing_points $point_index] rise_fall]
+ 	        puts "$rise_fall"
+
 		
 		if {[string equal -length 4 $ref_name AND2]} {
 		    set p_mask [AND2_masking $cell_name $pin_name]
 		}
 		if {[string equal -length 3 $ref_name OR2]} {
 		    set p_mask [OR2_masking $cell_name $pin_name]
+		}
+		if {[string equal -length 5 $ref_name NAND2]} {
+		    set p_mask [NAND2_masking $cell_name $pin_name $rise_fall]
 		}
 		#puts "p_mask: $p_mask"
 		append equation $p_mask " "
@@ -187,14 +241,27 @@ foreach_in_collection register [all_registers] {
     #set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] slack]
     set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] slack]
     
+    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
+	    
+    set c_slacks [calc_corrected_slack $slacks $setup_times]
+
+
     ## number of timing paths
     set num_paths [count_elements $slacks]
     
     ## failing paths
-    set num_failing [check_failing_paths $slacks]
-    
+    set num_failing [check_failing_paths $c_slacks]
+
+
     ## This is not a Input Register
     if {$num_reg > 0} {
+
+
+	## initialize gate masking table
+	
+        array set gate_mask [initialize_gate_mask $register]
+	puts "gate masking transitions:"
+	puts "[parray gate_mask]"
 	
 	puts "Num Reg: $num_reg"
 	puts "Num Paths: $num_paths"
@@ -226,10 +293,15 @@ foreach_in_collection register [all_registers] {
 	    #set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] slack]
 	    set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] slack]
 	    
-	    set num_failing [check_failing_paths $slacks]
+	    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
+	    
+	    set c_slacks [calc_corrected_slack $slacks $setup_times]
+	    #puts "c_slacks: $c_slacks"
+
+	    set num_failing [check_failing_paths $c_slacks]
 	 
 	    if {$num_failing > $num_failing_prev} {
-		set sum_pe [calc_overall_pe $pe_list $slacks]
+		set sum_pe [calc_overall_pe $pe_list $c_slacks]
 		#puts "failing paths: [check_failing_paths $slacks] @ $voltage *E-4 V -> p_e: $sum_pe"
 		puts "$voltage,$sum_pe"
 		set num_failing_prev  $num_failing

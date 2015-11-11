@@ -1,6 +1,6 @@
 clear all
 
-numRep = 10;
+numRep = 100000;
 
 fh = fopen('test_circuit.tvec','w+');
 
