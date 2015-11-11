@@ -1,5 +1,5 @@
 proc initialize_gate_mask {register} {
-    set gate_mask {}
+    global gate_mask
     foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells] {
 	set act_name [get_object_name $cell]
 	set act_type [get_attribute $cell ref_name]
@@ -13,7 +13,82 @@ proc initialize_gate_mask {register} {
 	}
 	
     }
-    return $gate_mask  
+}
+
+
+proc find_relevant_entries_in_mask {mask rise_fall input_index} {
+
+    set relevant_entries {}
+    #puts "$mask $rise_fall $input_index"
+    foreach comb $mask {
+	if {[string equal $rise_fall rise]} {
+	    if {[string equal [string index $comb $input_index] r]} {
+		#puts $comb
+		lappend relevant_entries $comb
+	    }
+	}
+	if {[string equal $rise_fall fall]} {
+	    if {[string equal [string index $comb $input_index] f]} {
+		#puts $comb
+		lappend relevant_entries $comb
+		
+	    }
+	}
+    }
+    return $relevant_entries
+}
+
+
+proc delete_entries_from_mask {gate_name entries} {
+    global gate_mask
+    set act_mask [dict get $gate_mask $gate_name mask]
+    #puts $act_mask
+    foreach to_delete_entry $entries {
+	set updated_mask {}
+	#puts $to_delete_entry
+	foreach entry $act_mask {
+	    if {[string equal $to_delete_entry $entry] == 0} {
+		lappend updated_mask $entry
+	    }
+	}
+	set act_mask $updated_mask
+    }
+    puts $updated_mask
+    set $gate_mask [dict remove $gate_mask $gate_name mask]
+    dict set gate_mask $gate_name mask $updated_mask
+}
+
+
+proc calculate_masking_probability {gate_name entries} {
+
+    set switching_activities_gate [get_switching_activity $gate_name/*]
+    set sum 0
+    foreach entry $entries {
+	set term 1
+	for {set x 0} {$x<[expr {[string length $entry]-1}]} {incr x} {
+	    set p1 [lindex [split [lindex $switching_activities_gate $x] " "] 5]
+	    #puts $p1
+	    if [string equal [string index $entry $x] r] {
+		set factor [expr {(1-$p1)*$p1}]
+	    }
+	    if [string equal [string index $entry $x] f] {
+		set factor [expr {$p1*(1-$p1)}]
+	    }
+	    if [string equal [string index $entry $x] 1] {
+		set factor [expr {$p1*$p1}]
+	    }
+	    if [string equal [string index $entry $x] 0] {
+		set factor [expr {(1-$p1)*(1-$p1)}]
+	    }
+	    puts $factor
+	    set term [expr {$factor * $term}]
+	}
+	set sum [expr {$sum + $term}]
+
+    }
+    puts "pe = $sum"
+    return $sum
+    
 }
 
 
@@ -49,14 +124,26 @@ proc OR2_masking {cell_name pin_name} {
 proc NAND2_masking {cell_name pin_name rise_fall} {
     puts "calculating masking probability for NAND2-Gate $cell_name ($pin_name)"
     
+    global gate_mask
+    set act_mask [dict get $gate_mask $cell_name mask]
+    #puts [dict get $gate_mask nand1 mask]
+    
     ## NAND gate: all other pins have to be "1"
     
     if {[string equal $pin_name IN1]} {
-	set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+	#set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 0]
+	set p_mask [calculate_masking_probability $cell_name $relevant_entries]
+
     }
     if {[string equal $pin_name IN2]} {
-	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
+	#set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
+	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 1]
+	set p_mask [calculate_masking_probability $cell_name $relevant_entries]
+
     }
+    puts "relevant_rentries $relevant_entries"
+    delete_entries_from_mask $cell_name $relevant_entries
     return $p_mask
 }
 
@@ -259,9 +346,10 @@ foreach_in_collection register [all_registers] {
 
 	## initialize gate masking table
 	
-        array set gate_mask [initialize_gate_mask $register]
-	puts "gate masking transitions:"
-	puts "[parray gate_mask]"
+        initialize_gate_mask $register
+	#global gate_mask
+	#puts "gate masking transitions:"
+	#puts "[dict get $gate_mask]"
 	
 	puts "Num Reg: $num_reg"
 	puts "Num Paths: $num_paths"
