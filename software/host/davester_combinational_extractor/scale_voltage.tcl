@@ -1,3 +1,13 @@
+proc calculate_kronecker {vector1 vector2} {
+    set result {}
+    foreach el1 $vector1 {
+	foreach el2 $vector2 {
+	    lappend result [expr {$el1 * $el2}]
+	}
+    }
+    return $result
+}
+
 proc initialize_gate_mask {register} {
     global gate_mask
     foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells] {
@@ -42,7 +52,9 @@ proc find_relevant_entries_in_mask {mask rise_fall input_index} {
 proc delete_entries_from_mask {gate_name entries} {
     global gate_mask
     set act_mask [dict get $gate_mask $gate_name mask]
-    #puts $act_mask
+    puts $act_mask
+    puts $entries
+    puts $gate_name
     foreach to_delete_entry $entries {
 	set updated_mask {}
 	#puts $to_delete_entry
@@ -59,52 +71,63 @@ proc delete_entries_from_mask {gate_name entries} {
 }
 
 
-proc calculate_masking_probability {gate_name entries} {
+proc calculate_masking_probability {gate_name entries input_index} {
 
     set switching_activities_gate [get_switching_activity $gate_name/*]
-    set sum 0
+    set result {}
     foreach entry $entries {
 	set term 1
 	for {set x 0} {$x<[expr {[string length $entry]-1}]} {incr x} {
-	    set p1 [lindex [split [lindex $switching_activities_gate $x] " "] 5]
-	    #puts $p1
-	    if [string equal [string index $entry $x] r] {
-		set factor [expr {(1-$p1)*$p1}]
+	    if {$input_index != $x} {
+		set p1 [lindex [split [lindex $switching_activities_gate $x] " "] 5]
+		#puts $p1
+		if [string equal [string index $entry $x] r] {
+		    set factor [expr {(1-$p1)*$p1}]
+		}
+		if [string equal [string index $entry $x] f] {
+		    set factor [expr {$p1*(1-$p1)}]
+		}
+		if [string equal [string index $entry $x] 1] {
+		    set factor [expr {$p1*$p1}]
+		}
+		if [string equal [string index $entry $x] 0] {
+		    set factor [expr {(1-$p1)*(1-$p1)}]
+		}
+		puts $factor
+		set term [expr {$factor * $term}]
 	    }
-	    if [string equal [string index $entry $x] f] {
-		set factor [expr {$p1*(1-$p1)}]
-	    }
-	    if [string equal [string index $entry $x] 1] {
-		set factor [expr {$p1*$p1}]
-	    }
-	    if [string equal [string index $entry $x] 0] {
-		set factor [expr {(1-$p1)*(1-$p1)}]
-	    }
-	    puts $factor
-	    set term [expr {$factor * $term}]
 	}
-	set sum [expr {$sum + $term}]
-
+	lappend result $term
+	
     }
-    puts "pe = $sum"
-    return $sum
+    puts "mask transitions = $result"
+    return $result
     
 }
 
 
 
-proc AND2_masking {cell_name pin_name} {
+proc AND2_masking {cell_name pin_name rise_fall} {
     puts "calculating masking probability for AND2-Gate $cell_name ($pin_name)"
-
+    global gate_mask
+    set act_mask [dict get $gate_mask $cell_name mask]
+    puts "act mask: $act_mask"
     ## AND gate: all other pins have to be "1"
-    
     if {[string equal $pin_name IN1]} {
-	set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 0]
+	set p_mask [calculate_masking_probability $cell_name $relevant_entries 0]
     }
     if {[string equal $pin_name IN2]} {
-	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
+	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 1]
+	set p_mask [calculate_masking_probability $cell_name $relevant_entries 1]
     }
-    return $p_mask
+    puts "relevant_rentries: $relevant_entries"
+    if {[llength $relevant_entries] != 0} {
+	delete_entries_from_mask $cell_name $relevant_entries
+	return $p_mask
+    } else {
+	return 1
+    }
 }
 
 proc OR2_masking {cell_name pin_name} {
@@ -129,18 +152,13 @@ proc NAND2_masking {cell_name pin_name rise_fall} {
     #puts [dict get $gate_mask nand1 mask]
     
     ## NAND gate: all other pins have to be "1"
-    
     if {[string equal $pin_name IN1]} {
-	#set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
 	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 0]
-	set p_mask [calculate_masking_probability $cell_name $relevant_entries]
-
+	set p_mask [calculate_masking_probability $cell_name $relevant_entries 0]
     }
     if {[string equal $pin_name IN2]} {
-	#set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
 	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 1]
-	set p_mask [calculate_masking_probability $cell_name $relevant_entries]
-
+	set p_mask [calculate_masking_probability $cell_name $relevant_entries 1]
     }
     puts "relevant_rentries $relevant_entries"
     delete_entries_from_mask $cell_name $relevant_entries
@@ -153,6 +171,14 @@ proc multiply_list {list} {
 	set product [expr {$product*[lindex $list $x]}]
     }
     return $product
+}
+
+proc sum_list {list} {
+    set sum 0
+    for {set x 0} {$x<[llength $list]} {incr x} {
+	set sum [expr {$sum+[lindex $list $x]}]
+    }
+    return $sum
 }
 
 
@@ -224,10 +250,11 @@ proc calc_error_probability {path} {
 		## failing 
 		if {$act_waypoint_index == 0} {
 		    
+## TODO:calculate for falling/rising
 		    set alpha_raw [lindex [split [get_switching_activity [get_object_name $act_point] ] " "] 2]
 		    #puts "alpha_raw: $alpha_raw"
 
-		    set alpha [expr {$alpha_raw*0.44/4}]
+		    set alpha [expr {$alpha_raw*0.44/2}]
 		    #set alpha 1
 
 		    #puts "alpha: $alpha"
@@ -243,7 +270,7 @@ proc calc_error_probability {path} {
 
 		
 		if {[string equal -length 4 $ref_name AND2]} {
-		    set p_mask [AND2_masking $cell_name $pin_name]
+		    set p_mask [AND2_masking $cell_name $pin_name $rise_fall]
 		}
 		if {[string equal -length 3 $ref_name OR2]} {
 		    set p_mask [OR2_masking $cell_name $pin_name]
@@ -251,11 +278,10 @@ proc calc_error_probability {path} {
 		if {[string equal -length 5 $ref_name NAND2]} {
 		    set p_mask [NAND2_masking $cell_name $pin_name $rise_fall]
 		}
-		#puts "p_mask: $p_mask"
-		append equation $p_mask " "
 		
-		
-		
+		## calculate kronecker tensor
+		set equation [calculate_kronecker $equation $p_mask]
+
 		incr act_waypoint_index 1
 	    }
 
@@ -266,7 +292,7 @@ proc calc_error_probability {path} {
 	}
 	incr point_index 1
 	puts "eq: $equation"
-	set pe [multiply_list $equation]
+	set pe [sum_list $equation]
 	puts "p_error|tau>Tclk: $pe"
 	append pe_list $pe " "
     }
