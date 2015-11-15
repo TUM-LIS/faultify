@@ -8,6 +8,22 @@ proc calculate_kronecker {vector1 vector2} {
     return $result
 }
 
+
+proc string_kronecker {vector1 vector2} {
+    set result {}
+    
+    foreach el1 $vector1 {
+	foreach el2 $vector2 {
+	    set cat ""
+	    #puts "$el1 $el2"
+	    append cat $el1 $el2 
+	    #puts $cat
+	    lappend result $cat
+	}
+    }
+    return $result
+}
+
 proc initialize_gate_mask {register} {
     global gate_mask
     foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells] {
@@ -48,6 +64,23 @@ proc find_relevant_entries_in_mask {mask rise_fall input_index} {
     return $relevant_entries
 }
 
+
+proc remove_output_from_mask {mask input_index} {
+    set new_mask {}
+    
+    foreach entry $mask {
+	set new_entry ""
+	
+	for {set x 0} {$x<[expr {[string length $entry]-1}]} {incr x} {
+	    #puts [string index $entry $x]
+	    append new_entry [string index $entry $x]
+	    }
+	append new_entry "-"
+	#puts $new_entry
+	lappend new_mask $new_entry
+    }
+    return $new_mask
+}
 
 proc delete_entries_from_mask {gate_name entries} {
     global gate_mask
@@ -93,76 +126,64 @@ proc calculate_masking_probability {gate_name entries input_index} {
 		if [string equal [string index $entry $x] 0] {
 		    set factor [expr {(1-$p1)*(1-$p1)}]
 		}
-		puts $factor
+		#puts $factor
 		set term [expr {$factor * $term}]
 	    }
 	}
 	lappend result $term
 	
     }
-    puts "mask transitions = $result"
+    #puts "mask transitions = $result"
     return $result
     
 }
 
 
 
-proc AND2_masking {cell_name pin_name rise_fall} {
-    puts "calculating masking probability for AND2-Gate $cell_name ($pin_name)"
-    global gate_mask
-    set act_mask [dict get $gate_mask $cell_name mask]
-    puts "act mask: $act_mask"
-    ## AND gate: all other pins have to be "1"
-    if {[string equal $pin_name IN1]} {
-	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 0]
-	set p_mask [calculate_masking_probability $cell_name $relevant_entries 0]
-    }
-    if {[string equal $pin_name IN2]} {
-	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 1]
-	set p_mask [calculate_masking_probability $cell_name $relevant_entries 1]
-    }
-    puts "relevant_rentries: $relevant_entries"
-    if {[llength $relevant_entries] != 0} {
-	delete_entries_from_mask $cell_name $relevant_entries
-	return $p_mask
-    } else {
-	return 1
-    }
-}
+proc get_input_pin_index {cell_type pin_name} {
 
-proc OR2_masking {cell_name pin_name} {
-    puts "calculating masking probability for OR2-Gate $cell_name ($pin_name)"
-
-    ## OR gate: all other pins have to be "0"
+    if {[string equal -length 4 $cell_type NAND]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+    }
     
-    if {[string equal $pin_name IN1]} {
-	set p_mask [lindex [split [get_switching_activity $cell_name/IN2] " "] 6]
+    if {[string equal -length 3 $cell_type AND]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
     }
-    if {[string equal $pin_name IN2]} {
-	set p_mask [lindex [split [get_switching_activity $cell_name/IN1] " "] 6]
-    }
-    return [expr 1- $p_mask]
+
+    return $input_index
 }
 
-proc NAND2_masking {cell_name pin_name rise_fall} {
+proc gate_masking {cell_name cell_type pin_name rise_fall} {
     puts "calculating masking probability for NAND2-Gate $cell_name ($pin_name)"
-    
+   
     global gate_mask
     set act_mask [dict get $gate_mask $cell_name mask]
-    #puts [dict get $gate_mask nand1 mask]
+    puts $act_mask
     
-    ## NAND gate: all other pins have to be "1"
-    if {[string equal $pin_name IN1]} {
-	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 0]
-	set p_mask [calculate_masking_probability $cell_name $relevant_entries 0]
-    }
-    if {[string equal $pin_name IN2]} {
-	set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall 1]
-	set p_mask [calculate_masking_probability $cell_name $relevant_entries 1]
-    }
-    puts "relevant_rentries $relevant_entries"
-    delete_entries_from_mask $cell_name $relevant_entries
-    return $p_mask
+    set input_index [get_input_pin_index $cell_type $pin_name]
+        
+    set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall $input_index]
+    puts $relevant_entries
+    set masking_probabilities [calculate_masking_probability $cell_name $relevant_entries $input_index]
+    puts $masking_probabilities
+
+    set new_mask [remove_output_from_mask $relevant_entries $input_index]
+    puts $new_mask
+
+    dict set gate_mask probs $masking_probabilities
+    dict set gate_mask mask $new_mask
+
+    return $gate_mask
 }
 
 proc multiply_list {list} {
@@ -224,6 +245,7 @@ proc calc_error_probability {path} {
 	set act_point [get_attribute [index_collection $timing_points $point_index] object]
 	set act_waypoint_index 0
 	set equation {}
+	set path_mask ""
 	while {[string equal [get_object_name $act_point] $endpoint] == 0} {
 
 	    ## extract cell name, type and input pin
@@ -259,6 +281,8 @@ proc calc_error_probability {path} {
 
 		    #puts "alpha: $alpha"
 		    append equation $alpha " "
+		    set rise_fall [get_attribute [index_collection $timing_points $point_index] rise_fall]
+		    append path_mask [string index $rise_fall 0] "-"
 		}
 		## Here we want to determine the probability that the
 		## signal is NOT masked. because then a fault will 
@@ -266,22 +290,20 @@ proc calc_error_probability {path} {
 
 
 		set rise_fall [get_attribute [index_collection $timing_points $point_index] rise_fall]
- 	        puts "$rise_fall"
+ 	        #puts "$rise_fall"
 
 		
-		if {[string equal -length 4 $ref_name AND2]} {
-		    set p_mask [AND2_masking $cell_name $pin_name $rise_fall]
-		}
-		if {[string equal -length 3 $ref_name OR2]} {
-		    set p_mask [OR2_masking $cell_name $pin_name]
-		}
-		if {[string equal -length 5 $ref_name NAND2]} {
-		    set p_mask [NAND2_masking $cell_name $pin_name $rise_fall]
-		}
-		
+		set p_mask [gate_masking $cell_name $ref_name $pin_name $rise_fall]
+
+
+		puts "mask: [dict get $p_mask mask]"
+		puts "probs: [dict get $p_mask probs]"
+
 		## calculate kronecker tensor
-		set equation [calculate_kronecker $equation $p_mask]
-
+		set equation [calculate_kronecker $equation [dict get $p_mask probs]]
+		set path_mask [string_kronecker $path_mask [dict get $p_mask mask]]
+		puts $path_mask
+		
 		incr act_waypoint_index 1
 	    }
 
@@ -357,7 +379,7 @@ foreach_in_collection register [all_registers] {
     set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
 	    
     set c_slacks [calc_corrected_slack $slacks $setup_times]
-
+    
 
     ## number of timing paths
     set num_paths [count_elements $slacks]
@@ -410,6 +432,7 @@ foreach_in_collection register [all_registers] {
 	    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
 	    
 	    set c_slacks [calc_corrected_slack $slacks $setup_times]
+	    
 	    #puts "c_slacks: $c_slacks"
 
 	    set num_failing [check_failing_paths $c_slacks]
