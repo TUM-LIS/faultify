@@ -15,7 +15,7 @@ link_design simple
 define_scaling_lib_group {saed90nm_typ.db saed90nm_typ_tm.db saed90nm_typ_ntl.db}
 
 
-create_clock -name "clk" -period 0.44 -waveform { 0 0.22  }  {clk}
+create_clock -name "clk" -period 0.4 -waveform { 0 0.2  }  {clk}
 #create_clock -name "clk" -period 60 -waveform { 0 30  }  {Clk_i}
 
 create_power_domain TOP

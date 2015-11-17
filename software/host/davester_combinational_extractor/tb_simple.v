@@ -4,7 +4,7 @@ module main;
    
    
    reg clk = 0;
-   always #220 clk = !clk;
+   always #200 clk = !clk;
 
    reg [2:0] in  = "111";
    reg [1:0] out;
@@ -40,7 +40,7 @@ module main;
    end
    
    integer num_cycles = 0;
-   integer max_cycles = 20;
+   integer max_cycles = 10000;
    
    always @ (posedge clk) begin
       std::randomize(in);
@@ -65,13 +65,14 @@ module main;
 
    
    always @ (posedge clk) begin
-      #440 
+      //#440 
 `ifdef GENTEST
       // write output to generate golden result   
       $fwrite(rvec_file, "%b\n", out[1]); 
 `else
       $fscanf(rvec_file, "%b\n", out_golden);
-      if (out_del != out_golden) begin
+      //if (out_del != out_golden) begin
+      if (out[1] != out_golden) begin
 	 //$display("ERROR At time %t: out[0]=%b",$time,out[0]);
 	 soe0 = soe0 + 1;
       end 

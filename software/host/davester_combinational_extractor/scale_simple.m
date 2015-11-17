@@ -1,6 +1,6 @@
 clear soe;
 clear slack;
-range = 0.8:0.01:1.2;
+range = 0.75:0.01:1.05;
 
 for i=1:numel(range)
     i

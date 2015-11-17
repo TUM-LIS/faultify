@@ -16,7 +16,7 @@ module simple (clk,IN1,IN2,IN3,Q,N2);
    
    
    NAND2X1 nand1 (IN1_reg,IN2_reg,N1);
-   AND2X1 and1 (N1,1'b1,N2);
+   AND2X1 and1 (N1,IN3_reg,N2);
 
    DFFX1 D_Reg (.CLK(clk),.D(N2),.Q(Q));
 

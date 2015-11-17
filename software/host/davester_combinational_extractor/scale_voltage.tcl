@@ -24,12 +24,54 @@ proc string_kronecker {vector1 vector2} {
     return $result
 }
 
+proc filter_path_equation {startpoint_gate path_mask equation} {
+    global consumed_paths
+    
+    if { [string equal  [dict exists $consumed_paths $startpoint_gate] 1]} {
+	set act_mask [dict get $consumed_paths $startpoint_gate]
+	set new_mask $act_mask
+    }
+       
+    set new_equation {}
+
+    if { [string equal  [dict exists $consumed_paths $startpoint_gate] 1]} {
+	set index 0
+	foreach entry1 $path_mask {
+	    #puts $entry1
+	    set found 0
+	    foreach entry2 $act_mask {
+		#puts $entry2
+		if {[string equal $entry1 $entry2]} {
+		    set found 1
+		    #puts "found"
+		}
+	    }
+	    if {$found == 0} {
+		#puts [lindex $equation $index]
+		lappend new_equation [lindex $equation $index]
+		lappend new_mask $entry1
+	    }
+	    incr index 1
+	}
+	dict set consumed_paths $startpoint_gate $new_mask
+	
+    } else {
+	dict set consumed_paths $startpoint_gate $path_mask
+	set new_equation $equation
+    }
+
+    #puts $consumed_paths
+    #puts $new_equation
+    return $new_equation
+}
+
+
 proc initialize_gate_mask {register} {
     global gate_mask
     foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells] {
 	set act_name [get_object_name $cell]
 	set act_type [get_attribute $cell ref_name]
-	#puts "$act_name ($act_type)"
+	puts "$act_name ($act_type)"
 	
 	if {[string equal -length 6 $act_type NAND2X]} {
 	    dict set gate_mask $act_name mask {rrf r1f ffr f1r 1rf 1fr};
@@ -113,7 +155,7 @@ proc calculate_masking_probability {gate_name entries input_index} {
 	for {set x 0} {$x<[expr {[string length $entry]-1}]} {incr x} {
 	    if {$input_index != $x} {
 		set p1 [lindex [split [lindex $switching_activities_gate $x] " "] 5]
-		#puts $p1
+		puts $p1
 		if [string equal [string index $entry $x] r] {
 		    set factor [expr {(1-$p1)*$p1}]
 		}
@@ -164,21 +206,21 @@ proc get_input_pin_index {cell_type pin_name} {
 }
 
 proc gate_masking {cell_name cell_type pin_name rise_fall} {
-    puts "calculating masking probability for NAND2-Gate $cell_name ($pin_name)"
+    puts "calculating masking probability for $cell_name ($pin_name)"
    
     global gate_mask
     set act_mask [dict get $gate_mask $cell_name mask]
-    puts $act_mask
+    #puts $act_mask
     
     set input_index [get_input_pin_index $cell_type $pin_name]
         
     set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall $input_index]
-    puts $relevant_entries
+    #puts $relevant_entries
     set masking_probabilities [calculate_masking_probability $cell_name $relevant_entries $input_index]
-    puts $masking_probabilities
+    #puts $masking_probabilities
 
     set new_mask [remove_output_from_mask $relevant_entries $input_index]
-    puts $new_mask
+    #puts $new_mask
 
     dict set gate_mask probs $masking_probabilities
     dict set gate_mask mask $new_mask
@@ -217,7 +259,7 @@ proc calc_overall_pe {pe_list slacks} {
 proc calc_corrected_slack {slacks setup_times} {
     set c_slack {}
     for {set x 0} {$x<[llength $slacks]} {incr x} {
-	append c_slack [expr {[lindex $slacks $x] + [expr {[lindex $setup_times $x]}]/1}] " "
+	append c_slack [expr {[lindex $slacks $x] + [expr {[lindex $setup_times $x]}]/2}] " "
     }
     return $c_slack
 }
@@ -233,7 +275,9 @@ proc calc_error_probability {path} {
     set point_index 0
     set pe_list {}
 
-    
+    global consumed_paths
+    set consumed_paths {}
+
 
     ## for all startpoints
     foreach_in_collection idx [get_attribute $path startpoint] {
@@ -272,11 +316,14 @@ proc calc_error_probability {path} {
 		## failing 
 		if {$act_waypoint_index == 0} {
 		    
-## TODO:calculate for falling/rising
-		    set alpha_raw [lindex [split [get_switching_activity [get_object_name $act_point] ] " "] 2]
+		    ## path startpoint_gate
+		    set startpoint_gate $cell_name
+		    
+		    ## TODO:calculate for falling/rising
+		    set alpha_raw [lindex [split [get_switching_activity [get_object_name $act_point] ] " "] 6]
 		    #puts "alpha_raw: $alpha_raw"
 
-		    set alpha [expr {$alpha_raw*0.44/2}]
+		    set alpha [expr {$alpha_raw*(1-$alpha_raw)}]
 		    #set alpha 1
 
 		    #puts "alpha: $alpha"
@@ -313,14 +360,18 @@ proc calc_error_probability {path} {
 	    set act_point [get_attribute [index_collection $timing_points $point_index] object]
 	}
 	incr point_index 1
-	puts "eq: $equation"
-	set pe [sum_list $equation]
+
+	## filter for duplicate paths!
+	puts $startpoint_gate
+	set filtered_equation [filter_path_equation $startpoint_gate $path_mask $equation]
+	puts "eq: $filtered_equation"
+	set pe [sum_list $filtered_equation]
 	puts "p_error|tau>Tclk: $pe"
 	append pe_list $pe " "
     }
     return $pe_list
 }
-
+## David stinkt!
 proc count_register {l} {
     # -1 because we don't count ourself
     set total -1
@@ -351,6 +402,26 @@ proc check_failing_paths {l} {
 }
 
 
+proc get_slacks_at_last_gate {register t_clk} {
+
+    set arrivals [get_attribute [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] points] arrival]
+    set names [get_object_name [get_attribute [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] points] object]]
+
+    #puts $arrivals
+    #puts $names
+
+    set pos 0
+    set slack {}
+    foreach point $names {
+	if {[string equal $point [get_object_name $register]/D]} {
+	    lappend slack [expr {-1 * ([lindex $arrivals [expr {$pos - 1}]]) + (double($t_clk)/100)}]
+	}
+	incr pos 1
+    } 
+    #puts $slack
+    return $slack
+}
+
 #########################
 ## MAIN #################
 #########################
@@ -379,7 +450,7 @@ foreach_in_collection register [all_registers] {
     set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
 	    
     set c_slacks [calc_corrected_slack $slacks $setup_times]
-    
+    #set c_slacks [get_slacks_at_last_gate $register 60]
 
     ## number of timing paths
     set num_paths [count_elements $slacks]
@@ -432,7 +503,9 @@ foreach_in_collection register [all_registers] {
 	    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
 	    
 	    set c_slacks [calc_corrected_slack $slacks $setup_times]
-	    
+	    #set c_slacks $slacks
+	    #set c_slacks [get_slacks_at_last_gate $register 60]
+
 	    #puts "c_slacks: $c_slacks"
 
 	    set num_failing [check_failing_paths $c_slacks]

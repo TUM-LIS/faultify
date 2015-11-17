@@ -1,5 +1,5 @@
 clear all;
-range = 0.8:0.01:1.2;
+range = 0.75:0.001:1.2;
 
 for i=1:numel(range)
     i
