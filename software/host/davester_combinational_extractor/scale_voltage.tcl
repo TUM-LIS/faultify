@@ -155,7 +155,7 @@ proc calculate_masking_probability {gate_name entries input_index} {
 	for {set x 0} {$x<[expr {[string length $entry]-1}]} {incr x} {
 	    if {$input_index != $x} {
 		set p1 [lindex [split [lindex $switching_activities_gate $x] " "] 5]
-		puts $p1
+		#puts $p1
 		if [string equal [string index $entry $x] r] {
 		    set factor [expr {(1-$p1)*$p1}]
 		}
@@ -259,7 +259,7 @@ proc calc_overall_pe {pe_list slacks} {
 proc calc_corrected_slack {slacks setup_times} {
     set c_slack {}
     for {set x 0} {$x<[llength $slacks]} {incr x} {
-	append c_slack [expr {[lindex $slacks $x] + [expr {[lindex $setup_times $x]}]/2}] " "
+	append c_slack [expr {[lindex $slacks $x] + [expr {[lindex $setup_times $x]}]/1}] " "
     }
     return $c_slack
 }
@@ -451,6 +451,7 @@ foreach_in_collection register [all_registers] {
 	    
     set c_slacks [calc_corrected_slack $slacks $setup_times]
     #set c_slacks [get_slacks_at_last_gate $register 60]
+    #set c_slacks $slacks 
 
     ## number of timing paths
     set num_paths [count_elements $slacks]
@@ -463,6 +464,14 @@ foreach_in_collection register [all_registers] {
     if {$num_reg > 0} {
 
 
+	set fields [split [get_object_name $register] "/"]
+	set easyname ""	
+	for {set i 0} {$i < [llength $fields]} {incr i} {
+	    append easyname [lindex $fields $i]	
+	}
+	
+	set _fh [open $easyname.csv w]
+	
 	## initialize gate masking table
 	
         initialize_gate_mask $register
@@ -510,16 +519,17 @@ foreach_in_collection register [all_registers] {
 
 	    set num_failing [check_failing_paths $c_slacks]
 	 
-	    if {$num_failing > $num_failing_prev} {
+	    #if {$num_failing > $num_failing_prev} {
 		set sum_pe [calc_overall_pe $pe_list $c_slacks]
 		#puts "failing paths: [check_failing_paths $slacks] @ $voltage *E-4 V -> p_e: $sum_pe"
-		puts "$voltage,$sum_pe"
+		puts $_fh "$voltage,$sum_pe"
 		set num_failing_prev  $num_failing
-	    }
+	    #}
 	    
 	}
 
-	
+	close $_fh
 	
     }
+
 }

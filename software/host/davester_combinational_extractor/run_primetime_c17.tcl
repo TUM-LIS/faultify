@@ -40,7 +40,7 @@ set_domain_supply_net TOP -primary_power_net VDD_TYP -primary_ground_net VSS
 set_domain_supply_net pdA -primary_power_net VDD_LOW -primary_ground_net VSS
 
 
-set_voltage 0.751 -object_list VDD_TYP
+set_voltage 1.2 -object_list VDD_TYP
 set_voltage 0.8 -object_list VDD_LOW
 set_temperature 25.0 -object_list [get_cells]
 
