@@ -4,7 +4,7 @@ module main;
    
    
    reg clk = 0;
-   always #1000 clk = !clk;
+   always #1400 clk = !clk;
 
    reg [35:0] in  = "1111111111111111111111111111111111";
    reg [6:0] out;

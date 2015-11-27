@@ -68,7 +68,7 @@ proc filter_path_equation {startpoint_gate path_mask equation} {
 
 proc initialize_gate_mask {register} {
     global gate_mask
-    foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells] {
+    foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells -flat] {
 	set act_name [get_object_name $cell]
 	set act_type [get_attribute $cell ref_name]
 	puts "$act_name ($act_type)"
@@ -79,7 +79,15 @@ proc initialize_gate_mask {register} {
 	if {[string equal -length 5 $act_type AND2X]} {
 	    dict set gate_mask $act_name mask {rrr r1r fff f1f 1rr 1ff};
 	}
-	
+	if {[string equal -length 4 $act_type INVX]} {
+	    dict set gate_mask $act_name mask {rf fr};
+	}
+	if {[string equal -length 5 $act_type NOR2X]} {
+	    dict set gate_mask $act_name mask {0rf 0fr r0f rrf f0r ffr};
+	}
+	if {[string equal -length 5 $act_type NOR3X]} {
+	    dict set gate_mask $act_name mask {00rf 00fr r0rf f0fr 0r0f 0rrf rr0f rrrf 0f0r 0ffr ff0r fffr};
+	}
     }
 }
 
@@ -201,6 +209,20 @@ proc get_input_pin_index {cell_type pin_name} {
 	    set input_index 1
 	}
     }
+    if {[string equal -length 4 $cell_type INVX]} {
+	set input_index 0
+    }
+    if {[string equal -length 3 $cell_type NOR]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+    }
 
     return $input_index
 }
@@ -210,17 +232,18 @@ proc gate_masking {cell_name cell_type pin_name rise_fall} {
    
     global gate_mask
     set act_mask [dict get $gate_mask $cell_name mask]
-    #puts $act_mask
+    puts $act_mask
     
     set input_index [get_input_pin_index $cell_type $pin_name]
         
     set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall $input_index]
-    #puts $relevant_entries
+    puts $relevant_entries
+    
     set masking_probabilities [calculate_masking_probability $cell_name $relevant_entries $input_index]
-    #puts $masking_probabilities
+    puts $masking_probabilities
 
     set new_mask [remove_output_from_mask $relevant_entries $input_index]
-    #puts $new_mask
+    puts $new_mask
 
     dict set gate_mask probs $masking_probabilities
     dict set gate_mask mask $new_mask
