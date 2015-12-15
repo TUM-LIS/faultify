@@ -41,3 +41,4 @@ end
 %%
 
 out0 = csvread('pt_fpu_mul/F_Reg.csv');
+out1 = csvread('pt_fpu_mul/G_Reg.csv');

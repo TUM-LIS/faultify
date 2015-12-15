@@ -307,13 +307,13 @@ proc gate_masking {cell_name cell_type pin_name rise_fall} {
     #puts $masking_probabilities
 
     ### SIMPLIFICATION ####
-    set masking_probabilities [sum_list $masking_probabilities]
+    #set masking_probabilities [sum_list $masking_probabilities]
 
     #######################
 
     set new_mask [remove_output_from_mask $relevant_entries $input_index]
     ### SIMPLIFICATION ####
-    set new_mask [lindex $new_mask 1]
+    #set new_mask [lindex $new_mask 1]
 
     #puts $new_mask
 
@@ -499,7 +499,7 @@ proc calc_error_probability {path} {
 
 	## SIMPLIFICATION	
 	set filtered_equation [filter_path_equation $startpoint_gate $path_mask $equation]
-	set filtered_equation $equation
+	#set filtered_equation $equation
 	
 	#puts "eq: $filtered_equation"
 
@@ -592,8 +592,8 @@ foreach_in_collection register [all_registers] {
     
     set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 100000] endpoint_setup_time_value]
 	    
-    #set c_slacks [calc_corrected_slack $slacks $setup_times]
-    set c_slacks [get_slacks_at_last_gate $register [expr {$t_clk*100}] ]
+    set c_slacks [calc_corrected_slack $slacks $setup_times]
+    #set c_slacks [get_slacks_at_last_gate $register [expr {$t_clk*100}] ]
     #set c_slacks $slacks 
 
     ## number of timing paths
@@ -629,10 +629,10 @@ foreach_in_collection register [all_registers] {
 	puts ""
 	
 	# complex method
-	#set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
 	
 	# super simple method
-	set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	#set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
 
 	#puts "$pe_list"
 	
@@ -664,9 +664,9 @@ foreach_in_collection register [all_registers] {
 	    
 	    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000] endpoint_setup_time_value]
 	    
-	    #set c_slacks [calc_corrected_slack $slacks $setup_times]
+	    set c_slacks [calc_corrected_slack $slacks $setup_times]
 	    #set c_slacks $slacks
-	    set c_slacks [get_slacks_at_last_gate $register [expr {$t_clk*100}] ]
+	    #set c_slacks [get_slacks_at_last_gate $register [expr {$t_clk*100}] ]
 
 	
 	    #puts "c_slacks: $c_slacks"
