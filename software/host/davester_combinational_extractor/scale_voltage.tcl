@@ -66,30 +66,6 @@ proc filter_path_equation {startpoint_gate path_mask equation} {
 }
 
 
-proc initialize_gate_mask {register} {
-    global gate_mask
-    foreach_in_collection  cell [all_fanin -to [get_object_name $register]/D -only_cells -flat] {
-	set act_name [get_object_name $cell]
-	set act_type [get_attribute $cell ref_name]
-	puts "$act_name ($act_type)"
-	
-	if {[string equal -length 6 $act_type NAND2X]} {
-	    dict set gate_mask $act_name mask {rrf r1f ffr f1r 1rf 1fr};
-	}
-	if {[string equal -length 5 $act_type AND2X]} {
-	    dict set gate_mask $act_name mask {rrr r1r fff f1f 1rr 1ff};
-	}
-	if {[string equal -length 4 $act_type INVX]} {
-	    dict set gate_mask $act_name mask {rf fr};
-	}
-	if {[string equal -length 5 $act_type NOR2X]} {
-	    dict set gate_mask $act_name mask {0rf 0fr r0f rrf f0r ffr};
-	}
-	if {[string equal -length 5 $act_type NOR3X]} {
-	    dict set gate_mask $act_name mask {00rf 00fr r0rf f0fr 0r0f 0rrf rr0f rrrf 0f0r 0ffr ff0r fffr};
-	}
-    }
-}
 
 
 proc find_relevant_entries_in_mask {mask rise_fall input_index} {
@@ -135,9 +111,9 @@ proc remove_output_from_mask {mask input_index} {
 proc delete_entries_from_mask {gate_name entries} {
     global gate_mask
     set act_mask [dict get $gate_mask $gate_name mask]
-    puts $act_mask
-    puts $entries
-    puts $gate_name
+    #puts $act_mask
+    #puts $entries
+    #puts $gate_name
     foreach to_delete_entry $entries {
 	set updated_mask {}
 	#puts $to_delete_entry
@@ -148,7 +124,7 @@ proc delete_entries_from_mask {gate_name entries} {
 	}
 	set act_mask $updated_mask
     }
-    puts $updated_mask
+    #puts $updated_mask
     set $gate_mask [dict remove $gate_mask $gate_name mask]
     dict set gate_mask $gate_name mask $updated_mask
 }
@@ -156,6 +132,9 @@ proc delete_entries_from_mask {gate_name entries} {
 
 proc calculate_masking_probability {gate_name entries input_index} {
 
+    #puts $input_index
+    #puts $gate_name
+    #puts $entries
     set switching_activities_gate [get_switching_activity $gate_name/*]
     set result {}
     foreach entry $entries {
@@ -199,6 +178,12 @@ proc get_input_pin_index {cell_type pin_name} {
 	if {[string equal $pin_name IN2]} {
 	    set input_index 1
 	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
     }
     
     if {[string equal -length 3 $cell_type AND]} {
@@ -207,6 +192,12 @@ proc get_input_pin_index {cell_type pin_name} {
 	}
 	if {[string equal $pin_name IN2]} {
 	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
 	}
     }
     if {[string equal -length 4 $cell_type INVX]} {
@@ -222,28 +213,109 @@ proc get_input_pin_index {cell_type pin_name} {
 	if {[string equal $pin_name IN3]} {
 	    set input_index 2
 	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 2
+	}
     }
+
+    if {[string equal -length 2 $cell_type OR]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+    }
+
+
+    if {[string equal -length 2 $cell_type AO]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+	if {[string equal $pin_name IN5]} {
+	    set input_index 4
+	}
+	if {[string equal $pin_name IN6]} {
+	    set input_index 5
+	}
+    }
+
+
+    if {[string equal -length 2 $cell_type OA]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+	if {[string equal $pin_name IN5]} {
+	    set input_index 4
+	}
+    }
+
 
     return $input_index
 }
 
+proc calculate_mean {vector1} {
+    puts $vector1
+    set index 0
+    set sum 0
+    foreach el1 $vector1 {
+	incr index 1
+	set sum [expr $sum+$el1]
+    }
+    set mean [expr $sum/$index]
+    puts $mean
+    return $mean
+ }
+
 proc gate_masking {cell_name cell_type pin_name rise_fall} {
-    puts "calculating masking probability for $cell_name ($pin_name)"
+    #puts "calculating masking probability for $cell_name ($pin_name)"
    
     global gate_mask
     set act_mask [dict get $gate_mask $cell_name mask]
-    puts $act_mask
+    #puts $act_mask
     
     set input_index [get_input_pin_index $cell_type $pin_name]
         
     set relevant_entries [find_relevant_entries_in_mask $act_mask $rise_fall $input_index]
-    puts $relevant_entries
+    #puts $relevant_entries
     
     set masking_probabilities [calculate_masking_probability $cell_name $relevant_entries $input_index]
-    puts $masking_probabilities
+    #puts $masking_probabilities
+
+    ### SIMPLIFICATION ####
+    set masking_probabilities [sum_list $masking_probabilities]
+
+    #######################
 
     set new_mask [remove_output_from_mask $relevant_entries $input_index]
-    puts $new_mask
+    ### SIMPLIFICATION ####
+    set new_mask [lindex $new_mask 1]
+
+    #puts $new_mask
 
     dict set gate_mask probs $masking_probabilities
     dict set gate_mask mask $new_mask
@@ -286,7 +358,44 @@ proc calc_corrected_slack {slacks setup_times} {
     }
     return $c_slack
 }
+proc calc_error_probability_simple {path} {
+    puts "calculating probability distribution for ep: [lindex [get_object_name [get_attribute $path endpoint]] 0]"
+    set timing_points  [get_attribute $path points]
+    set endpoint "[lindex [get_object_name [get_attribute $path endpoint]] 0]"
 
+    set point_index 0
+    set pe_list {}
+
+    global consumed_paths
+    set consumed_paths {}
+
+    global t_clk
+
+    ## for all startpoints
+    foreach_in_collection idx [get_attribute $path startpoint] {
+	#puts "------------------------------"
+	#puts "--sp--: [get_object_name $idx]"
+	#puts "------------------------------"
+
+	## extract cell name, type and input pin
+	set fields [split [get_object_name $idx] "/"]
+	set cell_name [lindex $fields 0]
+	for {set i 1} {$i < [expr {[llength $fields]-1}]} {incr i} {
+	    append cell_name "/"
+	    append cell_name [lindex $fields $i]
+	}
+	set pin_name [lindex $fields [expr {[llength $fields]-1}] ]
+	set ref_name [get_attribute [get_cells $cell_name] ref_name]
+
+	#puts $cell_name
+
+	set alpha_raw [lindex [split [get_switching_activity "$cell_name/Q" ] " "] 2]
+
+	append pe_list [expr {$alpha_raw * [expr {$t_clk/4}] } ] " "
+
+    }
+    return $pe_list
+}
 
 proc calc_error_probability {path} {
 
@@ -304,9 +413,9 @@ proc calc_error_probability {path} {
 
     ## for all startpoints
     foreach_in_collection idx [get_attribute $path startpoint] {
-	puts "------------------------------"
-	puts "--sp--: [get_object_name $idx]"
-	puts "------------------------------"
+	#puts "------------------------------"
+	#puts "--sp--: [get_object_name $idx]"
+	#puts "------------------------------"
 	
 	## for all waypoints
 	set act_point [get_attribute [index_collection $timing_points $point_index] object]
@@ -330,8 +439,8 @@ proc calc_error_probability {path} {
 	    ## We don't care about FFs
 	    if {[string equal -length 3 $ref_name "DFF"] == 0} {
 		
-		puts "tp: [get_object_name $act_point]"
-		puts "tp_ref: $cell_name -> $ref_name"
+		#puts "tp: [get_object_name $act_point]"
+		#puts "tp_ref: $cell_name -> $ref_name"
 		
 		## our starting factor of the calculation
 		## the switching activity of input pin
@@ -342,7 +451,7 @@ proc calc_error_probability {path} {
 		    ## path startpoint_gate
 		    set startpoint_gate $cell_name
 		    
-		    ## TODO:calculate for falling/rising
+
 		    set alpha_raw [lindex [split [get_switching_activity [get_object_name $act_point] ] " "] 6]
 		    #puts "alpha_raw: $alpha_raw"
 
@@ -366,13 +475,13 @@ proc calc_error_probability {path} {
 		set p_mask [gate_masking $cell_name $ref_name $pin_name $rise_fall]
 
 
-		puts "mask: [dict get $p_mask mask]"
-		puts "probs: [dict get $p_mask probs]"
-
+		#puts "mask: [dict get $p_mask mask]"
+		#puts "probs: [dict get $p_mask probs]"
+		#puts "$equation"
 		## calculate kronecker tensor
 		set equation [calculate_kronecker $equation [dict get $p_mask probs]]
 		set path_mask [string_kronecker $path_mask [dict get $p_mask mask]]
-		puts $path_mask
+		#puts $path_mask
 		
 		incr act_waypoint_index 1
 	    }
@@ -385,16 +494,22 @@ proc calc_error_probability {path} {
 	incr point_index 1
 
 	## filter for duplicate paths!
-	puts $startpoint_gate
+	#puts $startpoint_gate
+	#puts $path_mask
+
+	## SIMPLIFICATION	
 	set filtered_equation [filter_path_equation $startpoint_gate $path_mask $equation]
-	puts "eq: $filtered_equation"
+	set filtered_equation $equation
+	
+	#puts "eq: $filtered_equation"
+
 	set pe [sum_list $filtered_equation]
-	puts "p_error|tau>Tclk: $pe"
+	#puts "p_error|tau>Tclk: $pe"
 	append pe_list $pe " "
     }
     return $pe_list
 }
-## David stinkt!
+
 proc count_register {l} {
     # -1 because we don't count ourself
     set total -1
@@ -425,10 +540,10 @@ proc check_failing_paths {l} {
 }
 
 
-proc get_slacks_at_last_gate {register t_clk} {
-
-    set arrivals [get_attribute [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] points] arrival]
-    set names [get_object_name [get_attribute [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] points] object]]
+proc get_slacks_at_last_gate {register tclk} {
+    global n_worst
+    set arrivals [get_attribute [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000] points] arrival]
+    set names [get_object_name [get_attribute [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000] points] object]]
 
     #puts $arrivals
     #puts $names
@@ -437,7 +552,7 @@ proc get_slacks_at_last_gate {register t_clk} {
     set slack {}
     foreach point $names {
 	if {[string equal $point [get_object_name $register]/D]} {
-	    lappend slack [expr {-1 * ([lindex $arrivals [expr {$pos - 1}]]) + (double($t_clk)/100)}]
+	    lappend slack [expr {-1 * ([lindex $arrivals [expr {$pos - 1}]]) + (double($tclk)/100)}]
 	}
 	incr pos 1
     } 
@@ -450,7 +565,7 @@ proc get_slacks_at_last_gate {register t_clk} {
 #########################
 
 
-
+source ../gate_mask.tcl
 
 foreach_in_collection register [all_registers] {
     
@@ -461,19 +576,24 @@ foreach_in_collection register [all_registers] {
     
     ## number of startpoint register
     set num_reg [count_register $fanin]
+    global n_worst
+    set n_worst 10000
+
+    global t_clk
+    set t_clk "0.6"
     
     ## startpoints
     #set startpoints [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] startpoint]
-    set startpoints [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] startpoint]
+    set startpoints [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000] startpoint]
     
     ## slacks
     #set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] slack]
-    set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] slack]
+    set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 100000] slack]
     
-    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
+    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 100000] endpoint_setup_time_value]
 	    
-    set c_slacks [calc_corrected_slack $slacks $setup_times]
-    #set c_slacks [get_slacks_at_last_gate $register 60]
+    #set c_slacks [calc_corrected_slack $slacks $setup_times]
+    set c_slacks [get_slacks_at_last_gate $register [expr {$t_clk*100}] ]
     #set c_slacks $slacks 
 
     ## number of timing paths
@@ -498,16 +618,22 @@ foreach_in_collection register [all_registers] {
 	## initialize gate masking table
 	
         initialize_gate_mask $register
+	
 	#global gate_mask
 	#puts "gate masking transitions:"
 	#puts "[dict get $gate_mask]"
 	
-	puts "Num Reg: $num_reg"
-	puts "Num Paths: $num_paths"
-	puts "Startpoints: [get_object_name $startpoints]"
+	puts "Num regs: $num_reg"
+	puts "Num timingpaths: $num_paths"
+	#puts "Startpoints: [get_object_name $startpoints]"
 	puts ""
 	
-	set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000]]
+	# complex method
+	#set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	
+	# super simple method
+	set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+
 	#puts "$pe_list"
 	
 	
@@ -521,23 +647,28 @@ foreach_in_collection register [all_registers] {
 	puts "--------------!--------------"
 	puts ""
 	puts ""
-
-	while {$num_failing < $num_paths} {
+	#$num_failing < $num_paths
+	while { $num_failing < $num_paths } {
 	    
 	    incr voltage -1
 	    
+	    if { $voltage < 600 } {
+		break
+	    }
+
 	    set_voltage [expr {double($voltage)/1000}] -object_list VDD_TYP
 	    
 	    ## update slacks
 	    #set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] slack]
-	    set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] slack]
+	    set slacks [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000] slack]
 	    
-	    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst 100000 -slack_lesser_than 10000] endpoint_setup_time_value]
+	    set setup_times [get_attribute [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000] endpoint_setup_time_value]
 	    
-	    set c_slacks [calc_corrected_slack $slacks $setup_times]
+	    #set c_slacks [calc_corrected_slack $slacks $setup_times]
 	    #set c_slacks $slacks
-	    #set c_slacks [get_slacks_at_last_gate $register 60]
+	    set c_slacks [get_slacks_at_last_gate $register [expr {$t_clk*100}] ]
 
+	
 	    #puts "c_slacks: $c_slacks"
 
 	    set num_failing [check_failing_paths $c_slacks]
@@ -545,7 +676,7 @@ foreach_in_collection register [all_registers] {
 	    #if {$num_failing > $num_failing_prev} {
 		set sum_pe [calc_overall_pe $pe_list $c_slacks]
 		#puts "failing paths: [check_failing_paths $slacks] @ $voltage *E-4 V -> p_e: $sum_pe"
-		puts $_fh "$voltage,$sum_pe"
+		puts $_fh "$voltage,$sum_pe,$num_failing"
 		set num_failing_prev  $num_failing
 	    #}
 	    

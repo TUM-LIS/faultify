@@ -36,3 +36,8 @@ for i=1:numel(range)
     
     
 end
+
+
+%%
+
+out0 = csvread('pt_fpu_mul/F_Reg.csv');

@@ -1,6 +1,6 @@
 clear soe;
 clear slack;
-range = 0.75:0.01:1.05;
+range = 0.8:0.001:1.199;
 
 for i=1:numel(range)
     i
@@ -28,10 +28,13 @@ for i=1:numel(range)
     
      soe(i) = str2double(d);
      
-
-
-
-    
     
     
 end
+
+
+
+%%
+
+out0 = csvread('pt_fpu_mul/D_Reg.csv');
+
