@@ -1,7 +1,7 @@
 module c432_wrap(in,out,clk);
 
-   input [35:0] in;
-   output [6:0] out;
+   input [0:35] in;
+   output [0:6] out;
    input 	clk;
 
 

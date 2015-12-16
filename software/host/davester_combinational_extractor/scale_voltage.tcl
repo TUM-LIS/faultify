@@ -307,13 +307,13 @@ proc gate_masking {cell_name cell_type pin_name rise_fall} {
     #puts $masking_probabilities
 
     ### SIMPLIFICATION ####
-    #set masking_probabilities [sum_list $masking_probabilities]
+    set masking_probabilities [sum_list $masking_probabilities]
 
     #######################
 
     set new_mask [remove_output_from_mask $relevant_entries $input_index]
     ### SIMPLIFICATION ####
-    #set new_mask [lindex $new_mask 1]
+    set new_mask [lindex $new_mask 1]
 
     #puts $new_mask
 
@@ -498,8 +498,8 @@ proc calc_error_probability {path} {
 	#puts $path_mask
 
 	## SIMPLIFICATION	
-	set filtered_equation [filter_path_equation $startpoint_gate $path_mask $equation]
-	#set filtered_equation $equation
+	#set filtered_equation [filter_path_equation $startpoint_gate $path_mask $equation]
+	set filtered_equation $equation
 	
 	#puts "eq: $filtered_equation"
 
@@ -577,10 +577,10 @@ foreach_in_collection register [all_registers] {
     ## number of startpoint register
     set num_reg [count_register $fanin]
     global n_worst
-    set n_worst 10000
+    set n_worst 1000
 
     global t_clk
-    set t_clk "0.6"
+    set t_clk "2.8"
     
     ## startpoints
     #set startpoints [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] startpoint]
@@ -629,10 +629,10 @@ foreach_in_collection register [all_registers] {
 	puts ""
 	
 	# complex method
-	set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	#set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
 	
 	# super simple method
-	#set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
 
 	#puts "$pe_list"
 	
