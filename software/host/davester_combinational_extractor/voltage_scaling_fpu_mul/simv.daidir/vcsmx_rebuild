@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+vcs 'tb_fpu' '-debug' "-lca" "-makedepends=Makefile.VCSMX_FOR_DVE_REBUILD"
+gmake -f Makefile.VCSMX_FOR_DVE_REBUILD
+vcs 'tb_fpu' '-debug'

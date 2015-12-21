@@ -1,0 +1,27 @@
+
+VLOGAN	= vlogan
+VLOGAN_OPT	= -timescale=1ps/1ps
+
+all :		_VCSgd_sTVzFd_1.db \
+	_VCSgd_DhJSfd_1.db \
+	_VCSgd_0SbBp_1.db \
+	_VCSgd_lwnTwd_1.db \
+
+
+
+_VCSgd_sTVzFd_1.db :	../saed90nm.v 
+		${VLOGAN}  ${VLOGAN_OPT} ../saed90nm.v
+
+
+_VCSgd_DhJSfd_1.db :	output.v 
+		${VLOGAN}  ${VLOGAN_OPT} output.v
+
+
+_VCSgd_0SbBp_1.db :	cut_wrapper.v 
+		${VLOGAN}  ${VLOGAN_OPT} cut_wrapper.v
+
+
+_VCSgd_lwnTwd_1.db :	saed90nm_cGate.v 
+		${VLOGAN}  ${VLOGAN_OPT} saed90nm_cGate.v
+
+

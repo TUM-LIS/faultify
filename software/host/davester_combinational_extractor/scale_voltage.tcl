@@ -185,7 +185,27 @@ proc get_input_pin_index {cell_type pin_name} {
 	    set input_index 3
 	}
     }
-    
+
+if {[string equal -length 4 $cell_type FADD]} {
+	if {[string equal $pin_name A]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name B]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name CI]} {
+	    set input_index 2
+	}
+    }
+ if {[string equal -length 4 $cell_type HADD]} {
+	if {[string equal $pin_name A0]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name B0]} {
+	    set input_index 1
+	}
+
+    }   
     if {[string equal -length 3 $cell_type AND]} {
 	if {[string equal $pin_name IN1]} {
 	    set input_index 0
@@ -203,6 +223,12 @@ proc get_input_pin_index {cell_type pin_name} {
     if {[string equal -length 4 $cell_type INVX]} {
 	set input_index 0
     }
+    if {[string equal -length 6 $cell_type DELLN1]} {
+	set input_index 0
+    }
+    if {[string equal -length 5 $cell_type NBUFF]} {
+	set input_index 0
+    }
     if {[string equal -length 3 $cell_type NOR]} {
 	if {[string equal $pin_name IN1]} {
 	    set input_index 0
@@ -214,8 +240,42 @@ proc get_input_pin_index {cell_type pin_name} {
 	    set input_index 2
 	}
 	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+    }
+if {[string equal -length 5 $cell_type MUX41]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
 	    set input_index 2
 	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+	if {[string equal $pin_name S0]} {
+	    set input_index 4
+	}
+	if {[string equal $pin_name S1]} {
+	    set input_index 5
+	}
+    }
+
+
+if {[string equal -length 5 $cell_type MUX21]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name S]} {
+	    set input_index 2
+	}
+
     }
 
     if {[string equal -length 2 $cell_type OR]} {
@@ -232,8 +292,34 @@ proc get_input_pin_index {cell_type pin_name} {
 	    set input_index 3
 	}
     }
-
-
+  if {[string equal -length 3 $cell_type XOR]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+    }
+  if {[string equal -length 3 $cell_type XNOR]} {
+	if {[string equal $pin_name IN1]} {
+	    set input_index 0
+	}
+	if {[string equal $pin_name IN2]} {
+	    set input_index 1
+	}
+	if {[string equal $pin_name IN3]} {
+	    set input_index 2
+	}
+	if {[string equal $pin_name IN4]} {
+	    set input_index 3
+	}
+    }
     if {[string equal -length 2 $cell_type AO]} {
 	if {[string equal $pin_name IN1]} {
 	    set input_index 0
@@ -292,7 +378,7 @@ proc calculate_mean {vector1} {
  }
 
 proc gate_masking {cell_name cell_type pin_name rise_fall} {
-    #puts "calculating masking probability for $cell_name ($pin_name)"
+    puts "calculating masking probability for $cell_name ($pin_name)"
    
     global gate_mask
     set act_mask [dict get $gate_mask $cell_name mask]
@@ -387,7 +473,7 @@ proc calc_error_probability_simple {path} {
 	set pin_name [lindex $fields [expr {[llength $fields]-1}] ]
 	set ref_name [get_attribute [get_cells $cell_name] ref_name]
 
-	#puts $cell_name
+	puts $cell_name
 
 	set alpha_raw [lindex [split [get_switching_activity "$cell_name/Q" ] " "] 2]
 
@@ -577,10 +663,10 @@ foreach_in_collection register [all_registers] {
     ## number of startpoint register
     set num_reg [count_register $fanin]
     global n_worst
-    set n_worst 1000
+    set n_worst 10
 
     global t_clk
-    set t_clk "2.8"
+    set t_clk "60"
     
     ## startpoints
     #set startpoints [get_attribute [get_timing_paths -to [get_object_name $register]/D  -cover_design -slack_lesser_than 10000] startpoint]
@@ -629,10 +715,10 @@ foreach_in_collection register [all_registers] {
 	puts ""
 	
 	# complex method
-	#set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	set pe_list [calc_error_probability [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
 	
 	# super simple method
-	set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
+	#set pe_list [calc_error_probability_simple [get_timing_paths -to [get_object_name $register]/D  -nworst $n_worst -slack_lesser_than 10000]]
 
 	#puts "$pe_list"
 	
@@ -648,6 +734,8 @@ foreach_in_collection register [all_registers] {
 	puts ""
 	puts ""
 	#$num_failing < $num_paths
+ 	if 0 {
+       
 	while { $num_failing < $num_paths } {
 	    
 	    incr voltage -1
@@ -681,9 +769,10 @@ foreach_in_collection register [all_registers] {
 	    #}
 	    
 	}
-
+	}
 	close $_fh
 	
     }
+	set gate_mask ""
 
 }

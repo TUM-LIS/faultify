@@ -1,0 +1,25 @@
+# This file contains the list of objects to create scsim.
+
+# --- $(VHDL_OBJS) dependency 
+VHDL_OBJS= $(EVENT_OBJS) $(CY_OBJS)
+
+LN      =ln -sf
+
+EVENT_OBJS=\
+	vh/_vhdl_ar_1.a\
+	vh/_vhdl_ar_2.a\
+	vh/_vhdl_ar_3.a\
+	vh/_vhdl_ar_4.a\
+	vh/ScMain.o\
+	vh/scscomm.o\
+	vh/scsFilelist.o
+
+vh/ScMain.o: vh/ScMain.c
+	@$(CC) $(CFLAGS) -o $@ -I$(SYNOPSYS_SIM)/include -c vh/ScMain.c
+
+vh/scscomm.o: vh/scscomm.c
+	@$(CC) $(CFLAGS) -o $@ -I$(SYNOPSYS_SIM)/include -I$(SYNOPSYS_SIM)/linux/lib -c vh/scscomm.c
+
+vh/scsFilelist.o: vh/scsFilelist.c
+	@$(CC) $(CFLAGS) -o $@ -I$(SYNOPSYS_SIM)/include -c vh/scsFilelist.c
+

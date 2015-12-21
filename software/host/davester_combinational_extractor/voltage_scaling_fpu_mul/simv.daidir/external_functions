@@ -1,0 +1,13 @@
+pli $hdl_xmr Mhdl_Xmr_call Mhdl_Xmr_check - /tmp/vcs_20151216192505_19307/__hdl_xmr.tab
+pli $hdl_xmr_void Mhdl_Xmr_Void Mhdl_Xmr_check - /tmp/vcs_20151216192505_19307/__hdl_xmr.tab
+pli $hdl_xmr_force Mhdl_Verilog_Force_Value - - /tmp/vcs_20151216192505_19307/__hdl_xmr.tab
+pli $hdl_xmr_release Mhdl_Verilog_Release_Force - - /tmp/vcs_20151216192505_19307/__hdl_xmr.tab
+pli $dumpports DumpPortsIeeeCALL - DumpPortsMISC 
+pli $lsi_dumpports DumpPortsLsiCALL - DumpPortsMISC 
+pli $dumpportson DumpPortsOnCALL - DumpPortsMISC 
+pli $dumpportsoff DumpPortsOffCALL - DumpPortsMISC 
+pli $dumpportsflush DumpPortsFlushCALL - DumpPortsMISC 
+pli $dumpportsall DumpPortsAllCALL - DumpPortsMISC 
+pli $dumpportslimit DumpPortsLimitCALL - DumpPortsMISC 
+pli $countdrivers CountDriversCALL - - 
+pli $vcsmemprof DMMemProfCALL - DMMemProfCheck 
